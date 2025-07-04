@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Services MCP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mcp-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .endpoint {
+            background: #e8f4f8;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1ecf1;
+        }
+        
+        .endpoint h3 {
+            color: #0c5460;
+            margin-bottom: 0.5rem;
+        }
+        
+        .endpoint code {
+            background: #f1f3f4;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        
+        .tools {
+            margin-top: 2rem;
+        }
+        
+        .tool-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .tool {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .tool h4 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 Water Services MCP</h1>
+            <p class="subtitle">Model Context Protocol Server</p>
+            <span class="status-badge">🟢 Online</span>
+        </div>
+        
+        <div class="mcp-info">
+            <h2>About This MCP Server</h2>
+            <p>This is a Model Context Protocol (MCP) server running on Cloudflare Workers. It provides various tools and services that can be used by MCP clients like Claude Desktop, Cursor, and other AI assistants.</p>
+        </div>
+        
+        <div class="endpoints">
+            <div class="endpoint">
+                <h3>🔗 MCP Endpoint</h3>
+                <p>Main MCP protocol endpoint</p>
+                <code>https://water-services-mcp.dudgeon.workers.dev/</code>
+            </div>
+            
+            <div class="endpoint">
+                <h3>📡 SSE Endpoint</h3>
+                <p>Server-Sent Events endpoint</p>
+                <code>https://water-services-mcp.dudgeon.workers.dev/sse</code>
+            </div>
+        </div>
+        
+        <div class="tools">
+            <h2>Available Tools</h2>
+            <div class="tool-list">
+                <div class="tool">
+                    <h4>🧮 Calculator</h4>
+                    <p>Basic arithmetic operations: add, subtract, multiply, divide</p>
+                </div>
+                
+                <div class="tool">
+                    <h4>➕ Add</h4>
+                    <p>Simple addition of two numbers</p>
+                </div>
+                
+                <div class="tool">
+                    <h4>🏔️ Local Destinations</h4>
+                    <p>Information about local attractions, featuring the Three Sisters</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="highlight">
+            <h3>🎯 Featured Destination: Three Sisters</h3>
+            <p>Ask about local destinations to learn about the stunning Three Sisters mountain range - perfect for hiking and scenic views!</p>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by Cloudflare Workers & Pages</p>
+            <p>Model Context Protocol Server v1.0.0</p>
+        </div>
+    </div>
+</body>
+</html> 

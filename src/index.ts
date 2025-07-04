@@ -55,6 +55,44 @@ export class MyMCP extends McpAgent {
 				return { content: [{ type: "text", text: String(result) }] };
 			}
 		);
+
+		// Local destinations tool
+		this.server.tool(
+			"local_destinations",
+			{
+				query: z.string().optional().describe("Optional query about specific destinations"),
+			},
+			async ({ query }) => {
+				const destinations = [
+					"🏔️ **Three Sisters** - A stunning mountain range perfect for hiking and scenic views",
+					"🌲 Local hiking trails with beautiful forest walks",
+					"🏞️ Scenic viewpoints and nature reserves",
+					"🎣 Local fishing spots and water activities",
+					"🏛️ Historical sites and cultural landmarks",
+					"🍽️ Local restaurants and cafes with regional specialties"
+				];
+
+				let response = "Here are some wonderful local destinations to explore:\n\n";
+				
+				if (query && query.toLowerCase().includes("mountain")) {
+					response += "🏔️ **Three Sisters** - This iconic mountain range is a must-visit destination! The Three Sisters offers:\n";
+					response += "- Spectacular hiking trails for all skill levels\n";
+					response += "- Breathtaking panoramic views\n";
+					response += "- Photography opportunities\n";
+					response += "- Wildlife viewing\n";
+					response += "- Seasonal activities (skiing in winter, hiking in summer)\n\n";
+				} else {
+					response += destinations.join("\n") + "\n\n";
+					response += "**Highlight: The Three Sisters** is particularly recommended for its spectacular mountain views and excellent hiking opportunities!\n\n";
+				}
+
+				response += "Would you like more specific information about any of these destinations?";
+
+				return {
+					content: [{ type: "text", text: response }],
+				};
+			}
+		);
 	}
 }
 
@@ -62,12 +100,14 @@ export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
+		// Handle SSE endpoint
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
 		}
 
-		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx);
+		// Handle MCP endpoint at root and /mcp
+		if (url.pathname === "/" || url.pathname === "/mcp") {
+			return MyMCP.serve("/").fetch(request, env, ctx);
 		}
 
 		return new Response("Not found", { status: 404 });

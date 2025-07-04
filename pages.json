@@ -1,0 +1,10 @@
+{
+  "name": "water-services-mcp-site",
+  "production_branch": "main",
+  "build": {
+    "command": "echo 'Static site - no build needed'",
+    "destination_dir": "public"
+  },
+  "env_vars": {},
+  "compatibility_date": "2025-01-01"
+} 
