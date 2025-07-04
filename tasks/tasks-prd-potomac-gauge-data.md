@@ -40,7 +40,7 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [x] 1.5 Add staleness detection and error state types
   - [x] 1.6 Update package.json with required dependencies (@types/node, vitest) and test scripts
 
-- [ ] 2.0 Implement USGS API service and data fetching
+- [x] 2.0 Implement USGS API service and data fetching
   - [x] 2.1 Create USGS API client class in `src/services/usgs-api.ts`
   - [x] 2.2 Create basic unit tests for USGS API service (`src/tests/services/usgs-api.test.ts`)
   - [x] 2.3 Implement current water level data fetching from station 01647600
@@ -96,15 +96,42 @@ Based on PRD: `prd-potomac-gauge-data.md`
     - **Solution**: Added 8 additional test cases covering malformed responses, network failures, and data corruption scenarios
     - **Result**: Total test suite now has 30 tests covering all error handling scenarios, all passing
 
-- [ ] 3.0 Implement caching layer using Cloudflare Cache API
-  - [ ] 3.1 Create cache service wrapper in `src/services/cache.ts`
-  - [ ] 3.2 Implement cache key generation strategy (differentiated by tool type and time window)
-  - [ ] 3.3 Add cache TTL management (14min for current, 30min for historical)
-  - [ ] 3.4 Implement cache invalidation via optional refresh header
-  - [ ] 3.5 Add cache hit/miss logging for monitoring
-  - [ ] 3.6 Handle cache failures gracefully (fall back to direct API calls)
+- [ ] 3.0 Implement caching layer using Cloudflare Cache API; confirm approach using the cloudflare docs, which you have access to
+  - [x] 3.1 Create cache service wrapper in `src/services/cache.ts`
+    - **Discovery**: Cloudflare Cache API requires custom domain or route to function (not available in dashboard/playground)
+    - **Finding**: Cache API uses Request/Response objects with proper headers for TTL management
+    - **Finding**: Cache storage is local to data center, doesn't replicate globally like CDN cache
+    - **Solution**: Implemented comprehensive wrapper with TTL management, stale data detection, metrics tracking
+    - **Result**: Created CacheService class with get/set/delete operations, cache key generation, and graceful fallback handling
+  - [x] 3.2 Implement cache key generation strategy (differentiated by tool type and time window)
+    - **Discovery**: Cache key strategy needs to balance uniqueness with cache hit efficiency
+    - **Finding**: Time bucketing is essential for cache alignment - multiple requests within same window should share cache
+    - **Solution**: Implemented structured cache key format: `{prefix}:{tool-type}:{data-type}:{time-bucket}:{url-hash}:{suffix}`
+    - **Result**: Added tool-specific helper methods (cacheCurrentWaterLevel, cacheHistoricalFlowRate, etc.) with appropriate TTLs and time windows
+  - [x] 3.3 Add cache TTL management (14min for current, 30min for historical)
+    - **Discovery**: TTL management requires both validation and automatic selection based on data type
+    - **Finding**: Different data types need different TTL strategies - current data (14min) vs historical data (30min)
+    - **Solution**: Implemented comprehensive TTL configuration with constants, validation, and automatic selection methods
+    - **Result**: Added TTL_CONFIG constants, getTtlForType() method, validateTtl() bounds checking, and enhanced all helper methods
+  - [x] 3.4 Implement cache invalidation via optional refresh header
+    - **Discovery**: Multiple HTTP headers can indicate cache refresh requirements (Cache-Control, Pragma, custom headers)
+    - **Finding**: Need to support both standard HTTP cache headers and custom refresh headers for flexibility
+    - **Solution**: Implemented comprehensive header parsing with support for Cache-Control: no-cache, Pragma: no-cache, X-Refresh-Cache, X-Force-Refresh
+    - **Result**: Added shouldRefreshFromHeaders(), shouldBypassCache(), extractCacheHeaders(), and request-aware caching methods
+  - [x] 3.5 Add cache hit/miss logging for monitoring
+    - **Discovery**: Comprehensive logging requires tracking multiple metrics beyond basic hit/miss ratios
+    - **Finding**: Need to track performance metrics, error rates, tool-specific patterns, and response times for effective monitoring
+    - **Solution**: Implemented detailed logging system with CacheLogEntry structure, metrics by tool/data type, and performance tracking
+    - **Result**: Added logCacheActivity(), getDetailedMetrics(), getCacheLog(), getPerformanceSummary() with 1000-entry log buffer and response time tracking
+  - [x] 3.6 Handle cache failures gracefully (fall back to direct API calls)
+  - **Discovery**: Basic fallback was already implemented but limited to simple cache miss scenarios
+  - **Finding**: Enhanced with comprehensive fallback strategies including stale data retrieval, emergency fallbacks, and configurable strategies
+  - **Challenge**: Needed to balance graceful degradation with performance while maintaining type safety for emergency responses
+  - **Solution**: Implemented multi-tier fallback system with stale data (up to 1-24 hours), emergency USGS-compatible responses, and configurable strategies ('ignore', 'stale', 'emergency', 'throw')
+  - **Result**: Added 9 new cache metrics (fallbackHits, emergencyFallbacks, cacheFailures), 3 new log action types (FALLBACK, EMERGENCY, CACHE_FAILURE), and enhanced helper methods with fallback support
+  - **Change of Plan**: Extended beyond simple fallback to include sophisticated emergency response generation that matches USGS API structure
 
-- [ ] 4.0 Build individual MCP tools (water level and flow rate)
+- [ ] 4.0 Build individual MCP tools (water level and flow rate); confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
   - [ ] 4.1 Implement `get_potomac_gage_depth` tool in `src/tools/potomac-gage-depth.ts`
   - [ ] 4.2 Add concurrent fetching of current and historical water level data
   - [ ] 4.3 Calculate 7-day min/max from historical NAVD88 data
@@ -117,7 +144,7 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [ ] 4.10 Format flow rate response according to PRD specification
   - [ ] 4.11 Register both tools with the MCP server in `src/index.ts`
 
-- [ ] 5.0 Implement combined conditions tool
+- [ ] 5.0 Implement combined conditions tool; confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
   - [ ] 5.1 Create `get_potomac_conditions` tool in `src/tools/potomac-conditions.ts`
   - [ ] 5.2 Implement concurrent API calls to both USGS stations
   - [ ] 5.3 Handle mixed data freshness scenarios (one station current, other stale)
@@ -159,3 +186,4 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [ ] 8.7 Add usage instructions for AI agents and MCP clients
   - [ ] 8.8 Update page title and description to reflect water services focus
   - [ ] 8.9 Add visual map showing USGS station locations and data types (station 01647600 for water level at Georgetown, station 01646500 for flow rate at Little Falls) 
+  - [ ] 8.10 Update `public/index.html` background to use /Users/geoffreydudgeon/Documents/Cursor Projects/water-services-mcp/public/river-fish-rocks-low.jpg as static background (does not scroll with page contents)
