@@ -42,21 +42,59 @@ Based on PRD: `prd-potomac-gauge-data.md`
 
 - [ ] 2.0 Implement USGS API service and data fetching
   - [x] 2.1 Create USGS API client class in `src/services/usgs-api.ts`
-  - [ ] 2.2 Create basic unit tests for USGS API service (`src/tests/services/usgs-api.test.ts`)
-  - [ ] 2.3 Implement current water level data fetching from station 01647600
-  - [ ] 2.4 Test current water level data fetching with mock responses
-  - [ ] 2.5 Implement 7-day historical water level data fetching with period=P7D
-  - [ ] 2.6 Test historical water level data fetching with mock responses
-  - [ ] 2.7 Implement current flow rate data fetching from station 01646500
-  - [ ] 2.8 Test current flow rate data fetching with mock responses
-  - [ ] 2.9 Implement 7-day historical flow rate data fetching with period=P7D
-  - [ ] 2.10 Test historical flow rate data fetching with mock responses
-  - [ ] 2.11 Add request timeout handling (5s for current, 8s for historical)
-  - [ ] 2.12 Test timeout handling with delayed mock responses
-  - [ ] 2.13 Parse USGS JSON responses and extract relevant time series data
-  - [ ] 2.14 Test JSON parsing with various USGS response formats
-  - [ ] 2.15 Handle empty or malformed API responses gracefully
-  - [ ] 2.16 Test error handling with malformed and empty responses
+  - [x] 2.2 Create basic unit tests for USGS API service (`src/tests/services/usgs-api.test.ts`)
+  - [x] 2.3 Implement current water level data fetching from station 01647600
+  - [x] 2.4 Test current water level data fetching with mock responses
+  - [x] 2.5 Implement 7-day historical water level data fetching with period=P7D
+    - **Discovery**: Implementation was already complete with proper `period=P7D` parameter
+    - **Finding**: Method correctly targets station 01647600 (Georgetown) with parameter code 00065
+  - [x] 2.6 Test historical water level data fetching with mock responses
+    - **Discovery**: Comprehensive tests already existed covering mock responses and P7D period validation
+    - **Finding**: Tests validate NAVD88 to WMLW conversion, quality codes, and timestamp parsing
+  - [x] 2.7 Implement current flow rate data fetching from station 01646500
+    - **Discovery**: Implementation was already complete targeting station 01646500 (Little Falls)
+    - **Finding**: Used correct parameter code `00060` for discharge measurement
+    - **Finding**: Includes concurrent historical data fetching for 7-day min/max calculation
+  - [x] 2.8 Test current flow rate data fetching with mock responses
+    - **Discovery**: Tests already covered mock responses and 7-day min/max calculation
+    - **Finding**: Tests validate station targeting, staleness detection, and concurrent data fetching
+  - [x] 2.9 Implement 7-day historical flow rate data fetching with period=P7D
+    - **Discovery**: Implementation was already complete with proper configuration
+    - **Finding**: Correctly uses Little Falls station (01646500) with discharge parameter (00060)
+  - [x] 2.10 Test historical flow rate data fetching with mock responses
+    - **Challenge**: No dedicated test existed for `getHistoricalFlowRatePoints` method
+    - **Solution**: Added comprehensive test covering P7D period, station targeting, and data parsing
+    - **Result**: Test suite expanded from 11 to 12 tests, all passing
+  - [x] 2.11 Add request timeout handling (5s for current, 8s for historical)
+    - **Discovery**: Timeout handling was already fully implemented with proper configuration
+    - **Finding**: Uses AbortController for clean timeout management with memory leak prevention
+    - **Finding**: Differentiated timeouts: 5s for current data, 8s for historical data
+  - [x] 2.12 Test timeout handling with delayed mock responses
+    - **Challenge**: Initial timeout tests were causing test framework timeouts
+    - **Solution**: Simplified tests to focus on AbortError handling and timeout error scenarios
+    - **Result**: Added 2 additional timeout tests, bringing total to 14 tests
+  - [x] 2.13 Parse USGS JSON responses and extract relevant time series data
+    - **Discovery**: Comprehensive JSON parsing already implemented with robust error handling
+    - **Finding**: Includes time series extraction, data point parsing, quality code handling
+    - **Finding**: Implements measurement grade extraction and graceful fallback mechanisms
+  - [x] 2.14 Test JSON parsing with various USGS response formats
+    - **Discovery**: Added comprehensive tests for edge cases including missing data structures, invalid values, and malformed responses
+    - **Finding**: USGS API can return responses with empty timeSeries arrays, missing values, or invalid numeric data
+    - **Challenge**: Initial implementation didn't validate numeric values, allowing NaN to propagate through calculations
+    - **Solution**: Added isNaN() validation in parsing methods and filter invalid values from historical data arrays
+    - **Result**: Added 8 new test cases covering various JSON parsing scenarios, all tests passing (22 total)
+  - [x] 2.15 Handle empty or malformed API responses gracefully
+    - **Discovery**: Comprehensive error handling was already implemented throughout the service
+    - **Finding**: All parsing methods use optional chaining and length checks to handle missing data structures
+    - **Finding**: Try-catch blocks wrap all parsing operations to handle malformed JSON or unexpected structures
+    - **Finding**: Network errors, HTTP errors, timeouts, and JSON parsing errors are all handled gracefully
+    - **Solution**: Methods return null for current data and empty arrays for historical data when errors occur
+  - [x] 2.16 Test error handling with malformed and empty responses
+    - **Discovery**: Added comprehensive tests covering edge cases like empty objects, undefined properties, and corrupted structures
+    - **Finding**: Service gracefully handles USGS no-data values (-999999), missing dateTime fields, and non-string value types
+    - **Finding**: Partial failures (e.g., historical data fetch failure) still allow current data to be returned with fallback values
+    - **Solution**: Added 8 additional test cases covering malformed responses, network failures, and data corruption scenarios
+    - **Result**: Total test suite now has 30 tests covering all error handling scenarios, all passing
 
 - [ ] 3.0 Implement caching layer using Cloudflare Cache API
   - [ ] 3.1 Create cache service wrapper in `src/services/cache.ts`

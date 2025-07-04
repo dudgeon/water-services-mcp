@@ -171,6 +171,11 @@ export class USGSApiService {
       const currentValue = parseFloat(latestValue.value);
       const timestamp = latestValue.dateTime;
 
+      // Check if parsed value is valid
+      if (isNaN(currentValue)) {
+        return null;
+      }
+
       // Calculate min/max from historical data
       const historicalValues = historical.map(point => point.navd88_ft);
       const sevenDayMin = historicalValues.length > 0 ? Math.min(...historicalValues) : currentValue;
@@ -205,17 +210,19 @@ export class USGSApiService {
 
       const values = timeSeries.values[0].value;
 
-      return values.map(value => {
-        const navd88Value = parseFloat(value.value);
-        const wmlwValue = navd88Value - 1.0; // Approximate conversion
+      return values
+        .map(value => {
+          const navd88Value = parseFloat(value.value);
+          const wmlwValue = navd88Value - 1.0; // Approximate conversion
 
-        return {
-          navd88_ft: navd88Value,
-          wmlw_ft: wmlwValue,
-          timestamp: value.dateTime,
-          quality_code: value.qualifiers?.[0]
-        };
-      });
+          return {
+            navd88_ft: navd88Value,
+            wmlw_ft: wmlwValue,
+            timestamp: value.dateTime,
+            quality_code: value.qualifiers?.[0]
+          };
+        })
+        .filter(point => !isNaN(point.navd88_ft)); // Filter out invalid values
     } catch (error) {
       console.error('Failed to parse historical water level response:', error);
       return [];
@@ -238,6 +245,11 @@ export class USGSApiService {
       const latestValue = timeSeries.values[0].value[0];
       const currentValue = parseFloat(latestValue.value);
       const timestamp = latestValue.dateTime;
+
+      // Check if parsed value is valid
+      if (isNaN(currentValue)) {
+        return null;
+      }
 
       // Calculate min/max from historical data
       const historicalValues = historical.map(point => point.discharge_cfs);
@@ -269,12 +281,14 @@ export class USGSApiService {
 
       const values = timeSeries.values[0].value;
 
-      return values.map(value => ({
-        discharge_cfs: parseFloat(value.value),
-        timestamp: value.dateTime,
-        quality_code: value.qualifiers?.[0],
-        measurement_grade: this.extractMeasurementGrade(value.qualifiers || [])
-      }));
+      return values
+        .map(value => ({
+          discharge_cfs: parseFloat(value.value),
+          timestamp: value.dateTime,
+          quality_code: value.qualifiers?.[0],
+          measurement_grade: this.extractMeasurementGrade(value.qualifiers || [])
+        }))
+        .filter(point => !isNaN(point.discharge_cfs)); // Filter out invalid values
     } catch (error) {
       console.error('Failed to parse historical flow rate response:', error);
       return [];

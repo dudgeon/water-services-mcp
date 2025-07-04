@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flowing River Theme</title>
+  <style>
+    :root {
+      --river-background: #B4D8C3;
+      --deep-navy: #1E2F2F;
+      --charcoal-ink: #2C3E3E;
+      --koi-orange: #E67E22;
+      --indigo-fish: #324D5C;
+      --bamboo-beige: #F5ECD9;
+      --warm-stone: #D6B470;
+      --leaf-green: #5C9E8A;
+      --wave-hover: #A6C4B6;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--river-background) url('/path-to-your-background-image.jpg') center center / cover no-repeat fixed;
+      font-family: 'Noto Serif JP', serif;
+      color: var(--deep-navy);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+
+    p {
+      font-size: 1.25em;
+      max-width: 600px;
+      color: var(--charcoal-ink);
+    }
+
+    a {
+      color: var(--leaf-green);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      color: var(--koi-orange);
+    }
+
+    button {
+      background-color: var(--indigo-fish);
+      color: var(--bamboo-beige);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      margin-top: 2em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--leaf-green);
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to the River</h1>
+  <p>Immerse yourself in a tranquil current. This space flows with intention, balance, and quiet energy.</p>
+  <a href="#">Explore More</a>
+  <br />
+  <button>Get Started</button>
+</body>
+</html>

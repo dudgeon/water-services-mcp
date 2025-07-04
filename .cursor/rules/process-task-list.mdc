@@ -1,8 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: false
----
 # Task List Management
 
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
@@ -11,7 +6,8 @@ Guidelines for managing task lists in markdown files to track progress on comple
 - **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
 - **Completion protocol:**  
   1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.
-  2. If **all** subtasks underneath a parent task are now `[x]`, follow this sequence:
+  2. **Document discoveries and findings** (see "Discovery Documentation" section below)
+  3. If **all** subtasks underneath a parent task are now `[x]`, follow this sequence:
     - **First**: Run the full test suite (`pytest`, `npm test`, `bin/rails test`, etc.)
     - **Only if all tests pass**: Stage changes (`git add .`)
     - **Clean up**: Remove any temporary files and temporary code before committing
@@ -25,13 +21,43 @@ Guidelines for managing task lists in markdown files to track progress on comple
         ```
         git commit -m "feat: add payment validation logic" -m "- Validates card type and expiry" -m "- Adds unit tests for edge cases" -m "Related to T123 in PRD"
         ```
-  3. Once all the subtasks are marked completed and changes have been committed, mark the **parent task** as completed.
+  4. Once all the subtasks are marked completed and changes have been committed, mark the **parent task** as completed.
 - Stop after each sub‑task and wait for the user's go‑ahead.
+
+## Discovery Documentation
+
+When completing each sub-task, **always add sub-bullets** to document:
+
+### Required Documentation Types:
+- **Discovery**: What you found that was unexpected or already implemented
+- **Finding**: Technical details, configurations, or implementation specifics discovered
+- **Challenge**: Problems, obstacles, or complications encountered
+- **Solution**: How challenges were resolved or worked around
+- **Result**: Outcomes, metrics, or measurable improvements achieved
+- **Change of Plan**: Any deviations from the original task approach
+
+### Format:
+```markdown
+- [x] 2.5 Task description
+  - **Discovery**: Implementation was already complete with proper configuration
+  - **Finding**: Uses correct parameter codes and station targeting
+  - **Challenge**: Initial tests were failing due to timeout issues
+  - **Solution**: Simplified test approach to focus on error handling
+  - **Result**: Test suite expanded from 11 to 14 tests, all passing
+```
+
+### When to Document:
+- **Always** add at least one sub-bullet when marking a task complete
+- **Prioritize** discoveries that change understanding or approach
+- **Include** technical details that would help future developers
+- **Document** any deviation from the expected implementation path
+- **Note** performance improvements, test additions, or architectural decisions
 
 ## Task List Maintenance
 
 1. **Update the task list as you work:**
    - Mark tasks and subtasks as completed (`[x]`) per the protocol above.
+   - Add discovery documentation as sub-bullets under completed tasks.
    - Add new tasks as they emerge.
 
 2. **Maintain the "Relevant Files" section:**
@@ -45,8 +71,10 @@ When working with task lists, the AI must:
 1. Regularly update the task list file after finishing any significant work.
 2. Follow the completion protocol:
    - Mark each finished **sub‑task** `[x]`.
+   - **Add discovery documentation as sub-bullets** before moving on.
    - Mark the **parent task** `[x]` once **all** its subtasks are `[x]`.
 3. Add newly discovered tasks.
 4. Keep "Relevant Files" accurate and up to date.
 5. Before starting work, check which sub‑task is next.
-6. After implementing a sub‑task, update the file and then pause for user approval.
+6. After implementing a sub‑task, update the file with discoveries/findings and then pause for user approval.
+7. **Never skip discovery documentation** - even simple tasks should have at least one sub-bullet explaining what was found or accomplished.
