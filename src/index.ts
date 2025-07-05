@@ -116,12 +116,45 @@ export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
-		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			return MyMCP.serveSse("/sse").fetch(request, env, ctx);
+		// Handle CORS preflight requests
+		if (request.method === "OPTIONS") {
+			return new Response(null, {
+				status: 200,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Access-Control-Max-Age": "86400",
+				},
+			});
 		}
 
+		// Create a response wrapper to add CORS headers
+		const addCorsHeaders = (response: Response) => {
+			const newResponse = new Response(response.body, response);
+			newResponse.headers.set("Access-Control-Allow-Origin", "*");
+			newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+			return newResponse;
+		};
+
+		// Handle root path and /message for SSE connections
+		if (url.pathname === "/" || url.pathname === "/message") {
+			// Create a new request with /sse path for compatibility
+			const sseUrl = new URL(request.url);
+			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
+			const sseRequest = new Request(sseUrl, request);
+			return MyMCP.serveSSE("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
+		}
+
+		// Keep /sse paths for backward compatibility
+		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+			return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
+		}
+
+		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx);
+			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		return new Response("Not found", { status: 404 });
