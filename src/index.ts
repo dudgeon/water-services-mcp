@@ -100,15 +100,15 @@ export class MyMCP extends McpAgent {
 			}
 		);
 
-		// Potomac water level tool
-		this.server.tool(
-			"get_potomac_gage_depth",
-			"Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range.",
-			GetPotomacGageDepthSchema,
-			async (params) => {
-				return await getPotomacGageDepth(params);
-			}
-		);
+		// Potomac water level tool (temporarily disabled for testing)
+		// this.server.tool(
+		// 	"get_potomac_gage_depth",
+		// 	"Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range.",
+		// 	GetPotomacGageDepthSchema,
+		// 	async (params) => {
+		// 		return await getPotomacGageDepth(params);
+		// 	}
+		// );
 	}
 }
 
