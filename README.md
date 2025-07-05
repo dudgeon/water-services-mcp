@@ -1,50 +1,93 @@
-# Building a Remote MCP Server on Cloudflare (Without Auth)
+# Water Services MCP Server
 
-This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. 
+A Model Context Protocol (MCP) server deployed on Cloudflare Workers that provides water level data and utility tools. This server doesn't require authentication and can be connected to Claude Desktop or other MCP clients.
 
-## Get started: 
+## Available Tools
 
-[![Deploy to Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/ai/tree/main/demos/remote-mcp-authless)
+The server provides the following tools:
+- `add` - Simple addition of two numbers
+- `calculate` - Multi-operation calculator (add, subtract, multiply, divide)
+- `local_destinations` - Information about local attractions and destinations
+- `get_potomac_gage_depth` - Potomac River water level data (currently disabled)
 
-This will deploy your MCP server to a URL like: `remote-mcp-server-authless.<your-account>.workers.dev/sse`
+## Server Endpoints
 
-Alternatively, you can use the command line below to get the remote MCP Server created on your local machine:
-```bash
-npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/remote-mcp-authless
-```
-
-## Customizing your MCP Server
-
-To add your own [tools](https://developers.cloudflare.com/agents/model-context-protocol/tools/) to the MCP server, define each tool inside the `init()` method of `src/index.ts` using `this.server.tool(...)`. 
-
-## Connect to Cloudflare AI Playground
-
-You can connect to your MCP server from the Cloudflare AI Playground, which is a remote MCP client:
-
-1. Go to https://playground.ai.cloudflare.com/
-2. Enter your deployed MCP server URL (`remote-mcp-server-authless.<your-account>.workers.dev/sse`)
-3. You can now use your MCP tools directly from the playground!
+- **SSE Stream**: `https://water-services-mcp.dudgeon.workers.dev/sse`
+- **Direct MCP**: `https://water-services-mcp.dudgeon.workers.dev/mcp`
+- **Base URL**: `https://water-services-mcp.dudgeon.workers.dev/` (redirects to SSE)
 
 ## Connect Claude Desktop to your MCP server
 
-You can also connect to your remote MCP server from local MCP clients, by using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote). 
+### Method 1: Using mcp-remote proxy (Works with all Claude Desktop tiers)
 
-To connect to your MCP server from Claude Desktop, follow [Anthropic's Quickstart](https://modelcontextprotocol.io/quickstart/user) and within Claude Desktop go to Settings > Developer > Edit Config.
+For Claude Desktop (all tiers including free), use the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote) to connect:
 
-Update with this configuration:
+1. Open Claude Desktop and go to **Settings > Developer > Edit Config**
+2. Add the following configuration:
 
 ```json
 {
   "mcpServers": {
-    "calculator": {
+    "water-services": {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "http://localhost:8787/sse"  // or remote-mcp-server-authless.your-account.workers.dev/sse
+        "https://water-services-mcp.dudgeon.workers.dev/sse"
       ]
     }
   }
 }
 ```
 
-Restart Claude and you should see the tools become available. 
+3. Restart Claude Desktop
+4. The Water Services tools should now be available in your conversation
+
+### Method 2: Direct Connection (Pro/Teams/Enterprise only)
+
+If you have Claude Desktop Pro, Teams, or Enterprise:
+
+1. Go to **Settings > Integrations** in Claude Desktop
+2. Add the server URL: `https://water-services-mcp.dudgeon.workers.dev/`
+3. The connection will be established automatically
+
+## Troubleshooting
+
+### Connection Issues
+
+If you see "There was an error connecting to Water Services server":
+
+1. **Verify you're using the correct method** - Free tier must use mcp-remote proxy
+2. **Check the URL** - Ensure you're using the `/sse` endpoint for mcp-remote
+3. **Restart Claude Desktop** after configuration changes
+4. **Check logs** - Run Claude Desktop from terminal to see detailed error messages
+
+### Common Errors
+
+- **"Server transport closed unexpectedly"** - This usually means the proxy isn't running. Make sure `npx mcp-remote` executes successfully
+- **"Authentication error"** - This server doesn't require auth. If you see this, check your configuration
+- **CORS errors** - The server is configured to accept all origins. This shouldn't occur
+
+## Development
+
+To run locally:
+
+```bash
+npm install
+npm run dev
+```
+
+The server will be available at `http://localhost:8787`
+
+To deploy to Cloudflare Workers:
+
+```bash
+npm run deploy
+```
+
+## Technical Details
+
+- **Runtime**: Cloudflare Workers with Durable Objects
+- **Protocol**: Model Context Protocol (MCP) v1.13.1
+- **Transport**: Server-Sent Events (SSE) and direct MCP
+- **Authentication**: None required (authless)
+- **CORS**: Configured for all origins with MCP-specific headers

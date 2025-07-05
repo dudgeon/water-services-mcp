@@ -161,12 +161,59 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [x] 3.5.6 Keep `/sse` and `/mcp` endpoints for backward compatibility
     - **Solution**: Maintained existing `/sse`, `/sse/message`, and `/mcp` endpoints with CORS headers
     - **Result**: Backward compatibility preserved while adding Claude Desktop support
-  - [x] 3.5.7 Test Claude Desktop connectivity with complete CORS and routing solution
-    - **Finding**: Implementation matches Penguin Bank configuration pattern with proper CORS and path handling
-    - **Result**: Complete routing solution ready for Claude Desktop connectivity testing
-  - [x] 3.5.8 Verify all transport methods work with proper CORS headers
-    - **Finding**: All endpoints (/, /message, /sse, /sse/message, /mcp) now include CORS headers
-    - **Result**: Cross-origin requests supported for all transport methods
+  - [ ] 3.5.7 Test Claude Desktop connectivity with complete CORS and routing solution
+    - **Status**: Implementation complete but requires actual testing with Claude Desktop
+    - **Note**: Code changes match Penguin Bank configuration pattern, but connectivity testing needed
+  - [ ] 3.5.8 Verify all transport methods work with proper CORS headers
+    - **Status**: Implementation complete but requires actual testing of each endpoint
+    - **Note**: Code includes CORS headers for all endpoints but needs verification testing
+  - [ ] 3.5.9 Debug Claude Desktop MCP connection failures (Error -32000: Connection closed)
+    - **Problem**: Claude Desktop showing repeated connection failures with "MCP error -32000: Connection closed"
+    - **Solution**: Diagnose and fix MCP server connectivity issues including deployment verification, SSE transport, and CORS configuration
+  - [ ] 3.5.10 Verify MCP server deployment and endpoint accessibility
+    - **Action**: Use `wrangler deploy` to ensure server is deployed and test endpoints with curl commands
+    - **Test**: Verify `/`, `/sse`, and `/mcp` endpoints return proper responses with correct headers
+  - [ ] 3.5.11 Test SSE connection directly with curl to validate Server-Sent Events transport
+    - **Action**: Use `curl -N -H "Accept: text/event-stream"` to test SSE endpoint functionality
+    - **Validation**: Ensure SSE connection establishes properly and maintains connection
+  - [ ] 3.5.12 Fix Claude Desktop URL configuration (use base URL, not /sse path)
+    - **Problem**: Claude Desktop expects base URL but may be configured with /sse path
+    - **Solution**: Ensure Claude Desktop config uses base worker URL without path suffix
+    - **Example**: Use `https://water-services-mcp.<account>.workers.dev` not `https://water-services-mcp.<account>.workers.dev/sse`
+  - [ ] 3.5.13 Debug CORS headers with OPTIONS preflight requests
+    - **Action**: Test CORS preflight with `curl -I -X OPTIONS` including Origin and Access-Control-Request-Method headers
+    - **Validation**: Verify proper CORS headers are returned for cross-origin requests from Claude Desktop
+  - [ ] 3.5.14 Fix Request object creation in SSE routing to preserve all request properties
+    - **Problem**: Current Request constructor `new Request(sseUrl, request)` may not preserve all request properties for SSE routing
+    - **Solution**: Use proper Request constructor with options object to preserve method, headers, body, and other properties
+    - **Code Fix**: Replace `new Request(sseUrl, request)` with `new Request(sseUrl.toString(), { method: request.method, headers: request.headers, body: request.body })`
+    - **Reference**: Based on working Penguin Bank MCP server pattern
+  - [ ] 3.5.15 Verify Durable Object configuration and instantiation for MCP agent
+    - **Action**: Ensure MyMCP class extends McpAgent properly and Durable Object is configured correctly in wrangler.jsonc
+    - **Validation**: Check that MCP agent initializes properly and handles requests correctly
+  - [ ] 3.5.16 Enable real-time debugging with wrangler tail for connection troubleshooting
+    - **Action**: Use `wrangler tail --format pretty` to monitor real-time requests and responses
+    - **Purpose**: Debug actual request/response flow when Claude Desktop attempts to connect
+  - [ ] 3.5.17 Test MCP server with simple MCP client before Claude Desktop integration
+    - **Action**: Use `mcp-remote` tool or similar to test MCP server functionality independently
+    - **Purpose**: Validate MCP server works correctly before debugging Claude Desktop specific issues
+  - [ ] 3.5.18 Verify server name consistency between wrangler.jsonc and Claude Desktop configuration
+    - **Problem**: Error mentions "Potomac Water Services" but server name is "water-services-mcp"
+    - **Solution**: Ensure Claude Desktop configuration uses correct server name and URL matching deployment
+  - [ ] 3.5.19 Verify Claude Desktop configuration follows working Penguin Bank pattern
+    - **Reference**: Based on working example at https://github.com/dudgeon/penguin-bank-mcp-flare/tree/main/my-mcp-server
+    - **Claude Desktop Config**: Should use `mcp-remote` proxy with base URL (no /sse suffix)
+    - **Example**: `"args": ["mcp-remote", "https://water-services-mcp.dudgeon.workers.dev"]`
+    - **Note**: The working example uses mcp-remote proxy, not direct SSE connection
+  - [ ] 3.5.20 Test with exact Claude Desktop configuration format from working example
+    - **Action**: Use the exact claude_desktop_config.json format from Penguin Bank example
+    - **Config Format**: `{ "mcpServers": { "water-services": { "command": "npx", "args": ["mcp-remote", "https://water-services-mcp.dudgeon.workers.dev"] } } }`
+    - **Validation**: Restart Claude Desktop and verify connection works
+  - [ ] 3.5.21 Verify mcp-remote proxy is installed and working
+    - **Action**: Test `npx mcp-remote` command works and can connect to deployed worker
+    - **Test Command**: `npx mcp-remote https://water-services-mcp.dudgeon.workers.dev`
+    - **Expected**: Should establish connection and show available tools
+    - **Note**: Claude Desktop uses mcp-remote as proxy, not direct connection
 
 - [ ] 4.0 Build individual MCP tools (water level and flow rate); confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
   - [x] 4.1 Implement `get_potomac_gage_depth` tool in `src/tools/potomac-gage-depth.ts`
@@ -206,9 +253,9 @@ Based on PRD: `prd-potomac-gauge-data.md`
     - [x] 4.6.4 Update response text format to: "Current: X.X feet (NAVD88), 7-day range: X.X to X.X feet (NAVD88)"
       - **Solution**: Implemented exact format requested with consistent NAVD88 labeling throughout
       - **Result**: Standardized format eliminates user confusion about datum consistency
-    - [x] 4.6.5 Test updated response format for clarity and consistency
-      - **Finding**: New format provides clear, unambiguous information with consistent datum labeling
-      - **Result**: Response format is now: "Current: X.X feet (NAVD88)\nTimestamp: [ISO timestamp]\n7-day range: X.X to X.X feet (NAVD88)"
+    - [ ] 4.6.5 Test updated response format for clarity and consistency
+      - **Status**: Implementation complete but requires actual testing with live data
+      - **Note**: Code changes implement consistent NAVD88 format but needs verification with real responses
     - [x] 4.6.6 Update tool description to guide AI clients to explain relationship between current level and 7-day range
         - **Solution**: Updated tool description from technical format to user-friendly instruction: "Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range."
         - **Result**: AI clients will now receive explicit guidance to provide contextual explanations rather than just raw data

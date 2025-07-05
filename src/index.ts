@@ -123,7 +123,8 @@ export default {
 				headers: {
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Access-Control-Allow-Headers": "Content-Type, Authorization, mcp-session-id, mcp-protocol-version",
+					"Access-Control-Expose-Headers": "mcp-session-id, mcp-protocol-version",
 					"Access-Control-Max-Age": "86400",
 				},
 			});
@@ -134,7 +135,8 @@ export default {
 			const newResponse = new Response(response.body, response);
 			newResponse.headers.set("Access-Control-Allow-Origin", "*");
 			newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, mcp-session-id, mcp-protocol-version");
+			newResponse.headers.set("Access-Control-Expose-Headers", "mcp-session-id, mcp-protocol-version");
 			return newResponse;
 		};
 
@@ -154,6 +156,11 @@ export default {
 
 		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
+			return MyMCP.serve("/mcp", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+		}
+
+		// Handle /messages path as alias for /mcp (some MCP clients use this)
+		if (url.pathname === "/messages") {
 			return MyMCP.serve("/mcp", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
