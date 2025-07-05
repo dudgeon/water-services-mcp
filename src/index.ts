@@ -149,61 +149,23 @@ export default {
 		// Handle root path and /message for SSE connections
 		if (url.pathname === "/" || url.pathname === "/message") {
 			console.log(`[MCP] Handling SSE request for ${url.pathname}`);
-			try {
-				// Create a new request with /sse path for compatibility
-				const sseUrl = new URL(request.url);
-				sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
-				const sseRequest = new Request(sseUrl.toString(), {
-					method: request.method,
-					headers: request.headers,
-					body: request.body,
-					duplex: 'half' as RequestDuplex
-				});
-				return env.MCP_OBJECT.fetch(sseRequest, env, ctx).then(addCorsHeaders);
-			} catch (error) {
-				console.error(`[MCP] Error handling SSE request:`, error);
-				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-					status: 500,
-					headers: {
-						"Access-Control-Allow-Origin": "*",
-						"Content-Type": "text/plain"
-					}
-				});
-			}
+			// Create a new request with /sse path for compatibility
+			const sseUrl = new URL(request.url);
+			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
+			const sseRequest = new Request(sseUrl.toString(), request);
+			return MyMCP.serveSSE("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
 		}
 
 		// Keep /sse paths for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			console.log(`[MCP] Handling direct SSE request for ${url.pathname}`);
-			try {
-				return env.MCP_OBJECT.fetch(request, env, ctx).then(addCorsHeaders);
-			} catch (error) {
-				console.error(`[MCP] Error handling direct SSE request:`, error);
-				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-					status: 500,
-					headers: {
-						"Access-Control-Allow-Origin": "*",
-						"Content-Type": "text/plain"
-					}
-				});
-			}
+			return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
 			console.log(`[MCP] Handling MCP request for ${url.pathname}`);
-			try {
-				return env.MCP_OBJECT.fetch(request, env, ctx).then(addCorsHeaders);
-			} catch (error) {
-				console.error(`[MCP] Error handling MCP request:`, error);
-				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-					status: 500,
-					headers: {
-						"Access-Control-Allow-Origin": "*",
-						"Content-Type": "text/plain"
-					}
-				});
-			}
+			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		console.log(`[MCP] No route found for ${url.pathname}`);
