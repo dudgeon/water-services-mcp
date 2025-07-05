@@ -3,6 +3,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getPotomacGageDepth, GetPotomacGageDepthSchema, WaterLevelOutputSchema } from "./tools/potomac-gage-depth.js";
 
+// Environment interface for proper typing
+interface Env {
+	MCP_OBJECT: DurableObjectNamespace;
+}
+
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
@@ -99,7 +104,7 @@ export class MyMCP extends McpAgent {
 		this.server.tool(
 			"get_potomac_gage_depth",
 			"Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range.",
-			{},
+			GetPotomacGageDepthSchema,
 			async (params) => {
 				return await getPotomacGageDepth(params);
 			}
@@ -109,16 +114,18 @@ export class MyMCP extends McpAgent {
 
 export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+		console.log(`[MCP] Incoming request: ${request.method} ${request.url}`);
 		const url = new URL(request.url);
 
 		// Handle CORS preflight requests
 		if (request.method === "OPTIONS") {
+			console.log(`[MCP] Handling CORS preflight for ${request.url}`);
 			return new Response(null, {
 				status: 200,
 				headers: {
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
 					"Access-Control-Max-Age": "86400",
 				},
 			});
@@ -126,32 +133,86 @@ export default {
 
 		// Create a response wrapper to add CORS headers
 		const addCorsHeaders = (response: Response) => {
-			const newResponse = new Response(response.body, response);
-			newResponse.headers.set("Access-Control-Allow-Origin", "*");
-			newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-			return newResponse;
+			try {
+				const newResponse = new Response(response.body, response);
+				newResponse.headers.set("Access-Control-Allow-Origin", "*");
+				newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+				newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+				newResponse.headers.set("Cache-Control", "no-cache");
+				return newResponse;
+			} catch (error) {
+				console.error(`[MCP] Error adding CORS headers:`, error);
+				return response;
+			}
 		};
 
 		// Handle root path and /message for SSE connections
 		if (url.pathname === "/" || url.pathname === "/message") {
-			// Create a new request with /sse path for compatibility
-			const sseUrl = new URL(request.url);
-			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
-			const sseRequest = new Request(sseUrl, request);
-			return MyMCP.serveSSE("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
+			console.log(`[MCP] Handling SSE request for ${url.pathname}`);
+			try {
+				// Create a new request with /sse path for compatibility
+				const sseUrl = new URL(request.url);
+				sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
+				const sseRequest = new Request(sseUrl.toString(), {
+					method: request.method,
+					headers: request.headers,
+					body: request.body,
+					duplex: 'half' as RequestDuplex
+				});
+				return env.MCP_OBJECT.fetch(sseRequest, env, ctx).then(addCorsHeaders);
+			} catch (error) {
+				console.error(`[MCP] Error handling SSE request:`, error);
+				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+					status: 500,
+					headers: {
+						"Access-Control-Allow-Origin": "*",
+						"Content-Type": "text/plain"
+					}
+				});
+			}
 		}
 
 		// Keep /sse paths for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
+			console.log(`[MCP] Handling direct SSE request for ${url.pathname}`);
+			try {
+				return env.MCP_OBJECT.fetch(request, env, ctx).then(addCorsHeaders);
+			} catch (error) {
+				console.error(`[MCP] Error handling direct SSE request:`, error);
+				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+					status: 500,
+					headers: {
+						"Access-Control-Allow-Origin": "*",
+						"Content-Type": "text/plain"
+					}
+				});
+			}
 		}
 
 		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
+			console.log(`[MCP] Handling MCP request for ${url.pathname}`);
+			try {
+				return env.MCP_OBJECT.fetch(request, env, ctx).then(addCorsHeaders);
+			} catch (error) {
+				console.error(`[MCP] Error handling MCP request:`, error);
+				return new Response(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+					status: 500,
+					headers: {
+						"Access-Control-Allow-Origin": "*",
+						"Content-Type": "text/plain"
+					}
+				});
+			}
 		}
 
-		return new Response("Not found", { status: 404 });
+		console.log(`[MCP] No route found for ${url.pathname}`);
+		return new Response("Not found", { 
+			status: 404,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Content-Type": "text/plain"
+			}
+		});
 	},
 };
