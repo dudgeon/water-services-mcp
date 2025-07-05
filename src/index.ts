@@ -1,11 +1,12 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { getPotomacGageDepth, GetPotomacGageDepthSchema, WaterLevelOutputSchema } from "./tools/potomac-gage-depth.js";
 
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
-		name: "Authless Calculator",
+		name: "Water Services MCP",
 		version: "1.0.0",
 	});
 
@@ -91,6 +92,15 @@ export class MyMCP extends McpAgent {
 				return {
 					content: [{ type: "text", text: response }],
 				};
+			}
+		);
+
+		// Potomac water level tool
+		this.server.tool(
+			"get_potomac_gage_depth",
+			{},
+			async (params) => {
+				return await getPotomacGageDepth(params);
 			}
 		);
 	}
