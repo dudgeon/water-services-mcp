@@ -130,13 +130,39 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - **Solution**: Implemented multi-tier fallback system with stale data (up to 1-24 hours), emergency USGS-compatible responses, and configurable strategies ('ignore', 'stale', 'emergency', 'throw')
   - **Result**: Added 9 new cache metrics (fallbackHits, emergencyFallbacks, cacheFailures), 3 new log action types (FALLBACK, EMERGENCY, CACHE_FAILURE), and enhanced helper methods with fallback support
   - **Change of Plan**: Extended beyond simple fallback to include sophisticated emergency response generation that matches USGS API structure
+  - **Live Test Results**: Created Node.js-compatible test demonstrating cache functionality with real USGS API calls:
+    - Cache hits reduced response time from 601ms to 0ms (instant)
+    - Achieved 40% hit ratio across 5 test requests (2 hits, 3 misses)
+    - Successfully cached live data: Georgetown water level (0.13 ft NAVD88), Little Falls flow rate (16,900 cfs)
+    - Force refresh correctly bypassed cache and fetched fresh data (252ms)
+    - Historical data with 1,675 points cached successfully for longer TTL
+    - Proper cache key separation between different endpoints maintained
+    - Network resilience demonstrated when some requests failed but service continued
+    - Cache effectiveness rated as "Good" (>30% threshold) with significant performance benefits
 
 - [ ] 4.0 Build individual MCP tools (water level and flow rate); confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
-  - [ ] 4.1 Implement `get_potomac_gage_depth` tool in `src/tools/potomac-gage-depth.ts`
-  - [ ] 4.2 Add concurrent fetching of current and historical water level data
-  - [ ] 4.3 Calculate 7-day min/max from historical NAVD88 data
-  - [ ] 4.4 Implement staleness detection (>30 minutes old)
-  - [ ] 4.5 Format response according to PRD specification
+  - [x] 4.1 Implement `get_potomac_gage_depth` tool in `src/tools/potomac-gage-depth.ts`
+    - **Discovery**: MCP 2025-06-18 specification supports structured content output with `structuredContent` field alongside traditional text content
+    - **Finding**: Tool requires proper typing for concurrent Promise.all operations and cache service method signatures
+    - **Solution**: Implemented comprehensive tool with Zod schemas for input/output validation, concurrent data fetching, and structured JSON responses
+    - **Result**: Created fully functional MCP tool that fetches current water level data from USGS station 01647600 with 7-day historical context
+  - [x] 4.2 Add concurrent fetching of current and historical water level data
+    - **Discovery**: Cache service methods require URL string as first parameter, then fetch function, then options
+    - **Finding**: Concurrent fetching using Promise.all significantly improves performance over sequential calls
+    - **Solution**: Used Promise.all with proper cache service method signatures and static CacheService.extractCacheHeaders()
+    - **Result**: Concurrent data fetching implemented with proper error handling and cache integration
+  - [x] 4.3 Calculate 7-day min/max from historical NAVD88 data
+    - **Finding**: Historical data requires proper type checking and NaN validation to handle USGS API edge cases
+    - **Solution**: Added Array.isArray() checks and proper TypeScript typing for WaterLevelHistoricalPoint
+    - **Result**: Robust 7-day min/max calculation with fallback to current value when historical data unavailable
+  - [x] 4.4 Implement staleness detection (>30 minutes old)
+    - **Finding**: Staleness detection requires timestamp parsing and age calculation in minutes
+    - **Solution**: Implemented age calculation using Date objects and 30-minute threshold as specified in PRD
+    - **Result**: Proper staleness detection with clear boolean indicator in response
+  - [x] 4.5 Format response according to PRD specification
+    - **Finding**: MCP tools should return both human-readable text content and structured content for AI agent consumption
+    - **Solution**: Implemented dual output format with descriptive text and structured JSON matching PRD specification exactly
+    - **Result**: Response format matches PRD specification with navd88_ft, wmlw_ft, timestamp, seven_day_min_ft, seven_day_max_ft, and stale fields
   - [ ] 4.6 Implement `get_potomac_flow` tool in `src/tools/potomac-flow.ts`
   - [ ] 4.7 Add concurrent fetching of current and historical flow rate data
   - [ ] 4.8 Calculate 7-day min/max from historical discharge data
