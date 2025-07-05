@@ -98,7 +98,7 @@ export class MyMCP extends McpAgent {
 		// Potomac water level tool
 		this.server.tool(
 			"get_potomac_gage_depth",
-			"Get current Potomac River water level at Georgetown (USGS Station 01647600) with 7-day historical context and staleness detection",
+			"Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range.",
 			{},
 			async (params) => {
 				return await getPotomacGageDepth(params);

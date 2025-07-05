@@ -163,12 +163,21 @@ Based on PRD: `prd-potomac-gauge-data.md`
     - **Finding**: MCP tools should return both human-readable text content and structured content for AI agent consumption
     - **Solution**: Implemented dual output format with descriptive text and structured JSON matching PRD specification exactly
     - **Result**: Response format matches PRD specification with navd88_ft, wmlw_ft, timestamp, seven_day_min_ft, seven_day_max_ft, and stale fields
-  - [ ] 4.6 Implement `get_potomac_flow` tool in `src/tools/potomac-flow.ts`
-  - [ ] 4.7 Add concurrent fetching of current and historical flow rate data
-  - [ ] 4.8 Calculate 7-day min/max from historical discharge data
-  - [ ] 4.9 Implement staleness detection for flow data
-  - [ ] 4.10 Format flow rate response according to PRD specification
-  - [ ] 4.11 Register both tools with the MCP server in `src/index.ts`
+  - [ ] 4.6 Fix datum format confusion in `get_potomac_gage_depth` tool response
+    - **Problem**: Tool currently shows both NAVD88 and WMLW values for current reading, but 7-day range doesn't specify which datum it uses, causing user confusion
+    - **Solution**: Standardize on single datum format (NAVD88) for both current reading and 7-day range to eliminate ambiguity
+  - [ ] 4.6.1 Update water level tool to use only NAVD88 datum format in response text
+  - [ ] 4.6.2 Remove WMLW datum from response text to eliminate confusion
+  - [ ] 4.6.3 Ensure 7-day range explicitly states it's in NAVD88 format
+  - [ ] 4.6.4 Update response text format to: "Current: X.X feet (NAVD88), 7-day range: X.X to X.X feet (NAVD88)"
+  - [ ] 4.6.5 Test updated response format for clarity and consistency
+  - [ ] 4.6.6 Update tool description to guide AI clients to explain relationship between current level and 7-day range
+  - [ ] 4.7 Implement `get_potomac_flow` tool in `src/tools/potomac-flow.ts`
+  - [ ] 4.8 Add concurrent fetching of current and historical flow rate data
+  - [ ] 4.9 Calculate 7-day min/max from historical discharge data
+  - [ ] 4.10 Implement staleness detection for flow data
+  - [ ] 4.11 Format flow rate response according to PRD specification
+  - [ ] 4.12 Register both tools with the MCP server in `src/index.ts`
 
 - [ ] 5.0 Implement combined conditions tool; confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
   - [ ] 5.1 Create `get_potomac_conditions` tool in `src/tools/potomac-conditions.ts`
