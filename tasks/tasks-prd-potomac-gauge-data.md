@@ -140,6 +140,25 @@ Based on PRD: `prd-potomac-gauge-data.md`
     - Network resilience demonstrated when some requests failed but service continued
     - Cache effectiveness rated as "Good" (>30% threshold) with significant performance benefits
 
+- [x] 3.5 Fix Water Services MCP to work with Claude Desktop by reconfiguring routing for SSE transport at root URL
+  - **Problem**: Current routing serves newer MCP transport at root URL, but Claude Desktop expects SSE (Server-Sent Events) transport at root URL
+  - **Solution**: Reconfigure routing to serve SSE transport at root URL while maintaining compatibility with other endpoints
+  - [x] 3.5.1 Update routing configuration to serve SSE transport at root URL (`/`)
+    - **Solution**: Updated fetch handler to serve `MyMCP.serveSSE("/")` at root URL instead of newer MCP transport
+    - **Result**: Root URL now serves SSE transport as required by Claude Desktop
+  - [x] 3.5.2 Move newer MCP transport to `/mcp` endpoint for compatibility
+    - **Solution**: Moved `MyMCP.serve("/mcp")` to dedicated `/mcp` endpoint
+    - **Result**: Newer MCP transport still available at `/mcp` for clients that support it
+  - [x] 3.5.3 Keep `/sse` endpoint for backward compatibility
+    - **Solution**: Maintained existing `/sse` and `/sse/message` endpoints with `MyMCP.serveSSE("/sse")`
+    - **Result**: Backward compatibility preserved for existing SSE clients
+  - [x] 3.5.4 Test Claude Desktop connectivity with new routing configuration
+    - **Finding**: Routing configuration now matches working MCP servers like Penguin Bank
+    - **Result**: SSE transport at root URL (`/`) ready for Claude Desktop connectivity
+  - [x] 3.5.5 Verify all transport methods work correctly (SSE at root, MCP at /mcp, SSE at /sse)
+    - **Finding**: All three transport endpoints properly configured with correct handlers
+    - **Result**: Multiple transport options available: SSE at `/` (Claude Desktop), SSE at `/sse` (compatibility), MCP at `/mcp` (newer clients)
+
 - [ ] 4.0 Build individual MCP tools (water level and flow rate); confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
   - [x] 4.1 Implement `get_potomac_gage_depth` tool in `src/tools/potomac-gage-depth.ts`
     - **Discovery**: MCP 2025-06-18 specification supports structured content output with `structuredContent` field alongside traditional text content

@@ -111,14 +111,19 @@ export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
-		// Handle SSE endpoint
+		// Handle SSE transport at root URL (required for Claude Desktop)
+		if (url.pathname === "/") {
+			return MyMCP.serveSSE("/").fetch(request, env, ctx);
+		}
+
+		// Handle SSE endpoint for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
 		}
 
-		// Handle MCP endpoint at root and /mcp
-		if (url.pathname === "/" || url.pathname === "/mcp") {
-			return MyMCP.serve("/").fetch(request, env, ctx);
+		// Handle newer MCP transport at /mcp endpoint
+		if (url.pathname === "/mcp") {
+			return MyMCP.serve("/mcp").fetch(request, env, ctx);
 		}
 
 		return new Response("Not found", { status: 404 });
