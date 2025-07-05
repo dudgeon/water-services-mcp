@@ -32,7 +32,6 @@ export async function getPotomacGageDepth(
   request?: Request
 ): Promise<{
   content: Array<{ type: "text"; text: string }>;
-  structuredContent?: WaterLevelOutput;
 }> {
   try {
     // Initialize services
@@ -104,8 +103,7 @@ export async function getPotomacGageDepth(
 - Timestamp: ${waterLevelData.timestamp}${staleness}${range}`;
     
     return {
-      content: [{ type: "text", text: textContent }],
-      structuredContent: waterLevelData
+      content: [{ type: "text", text: textContent }]
     };
     
   } catch (error) {
