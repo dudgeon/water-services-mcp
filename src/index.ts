@@ -144,28 +144,28 @@ export default {
 		if (url.pathname === "/" || url.pathname === "/message") {
 			// For POST requests to root, handle as SSE message
 			if (request.method === "POST" && url.pathname === "/") {
-				return MyMCP.serveSSE("/sse", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+				return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
 			}
 			// Create a new request with /sse path for compatibility
 			const sseUrl = new URL(request.url);
 			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
 			const sseRequest = new Request(sseUrl, request);
-			return MyMCP.serveSSE("/sse", { binding: "MCP_OBJECT" }).fetch(sseRequest, env, ctx).then(addCorsHeaders);
+			return MyMCP.serveSSE("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
 		}
 
 		// Keep /sse paths for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			return MyMCP.serveSSE("/sse", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		// Handle /messages path as alias for /mcp (some MCP clients use this)
 		if (url.pathname === "/messages") {
-			return MyMCP.serve("/mcp", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		// Handle OAuth discovery endpoints (return 404 to indicate no auth required)
