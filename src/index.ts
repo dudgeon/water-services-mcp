@@ -114,67 +114,16 @@ export class MyMCP extends McpAgent {
 
 export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
-		console.log(`[MCP] Incoming request: ${request.method} ${request.url}`);
 		const url = new URL(request.url);
 
-		// Handle CORS preflight requests
-		if (request.method === "OPTIONS") {
-			console.log(`[MCP] Handling CORS preflight for ${request.url}`);
-			return new Response(null, {
-				status: 200,
-				headers: {
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-					"Access-Control-Max-Age": "86400",
-				},
-			});
-		}
-
-		// Create a response wrapper to add CORS headers
-		const addCorsHeaders = (response: Response) => {
-			try {
-				const newResponse = new Response(response.body, response);
-				newResponse.headers.set("Access-Control-Allow-Origin", "*");
-				newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-				newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
-				newResponse.headers.set("Cache-Control", "no-cache");
-				return newResponse;
-			} catch (error) {
-				console.error(`[MCP] Error adding CORS headers:`, error);
-				return response;
-			}
-		};
-
-		// Handle root path and /message for SSE connections
-		if (url.pathname === "/" || url.pathname === "/message") {
-			console.log(`[MCP] Handling SSE request for ${url.pathname}`);
-			// Create a new request with /sse path for compatibility
-			const sseUrl = new URL(request.url);
-			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
-			const sseRequest = new Request(sseUrl, request);
-			return MyMCP.serveSse("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
-		}
-
-		// Keep /sse paths for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			console.log(`[MCP] Handling direct SSE request for ${url.pathname}`);
-			return MyMCP.serveSse("/sse").fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serveSse("/sse").fetch(request, env, ctx);
 		}
 
-		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
-			console.log(`[MCP] Handling MCP request for ${url.pathname}`);
-			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serve("/mcp").fetch(request, env, ctx);
 		}
 
-		console.log(`[MCP] No route found for ${url.pathname}`);
-		return new Response("Not found", { 
-			status: 404,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-				"Content-Type": "text/plain"
-			}
-		});
+		return new Response("Not found", { status: 404 });
 	},
 };
