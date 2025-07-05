@@ -142,6 +142,10 @@ export default {
 
 		// Handle root path and /message for SSE connections
 		if (url.pathname === "/" || url.pathname === "/message") {
+			// For POST requests to root, handle as SSE message
+			if (request.method === "POST" && url.pathname === "/") {
+				return MyMCP.serveSSE("/sse", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+			}
 			// Create a new request with /sse path for compatibility
 			const sseUrl = new URL(request.url);
 			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
@@ -162,6 +166,11 @@ export default {
 		// Handle /messages path as alias for /mcp (some MCP clients use this)
 		if (url.pathname === "/messages") {
 			return MyMCP.serve("/mcp", { binding: "MCP_OBJECT" }).fetch(request, env, ctx).then(addCorsHeaders);
+		}
+
+		// Handle OAuth discovery endpoints (return 404 to indicate no auth required)
+		if (url.pathname === "/.well-known/oauth-authorization-server" || url.pathname === "/register") {
+			return addCorsHeaders(new Response("Not found", { status: 404 }));
 		}
 
 		return new Response("Not found", { status: 404 });
