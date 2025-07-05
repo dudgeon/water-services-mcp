@@ -152,14 +152,14 @@ export default {
 			// Create a new request with /sse path for compatibility
 			const sseUrl = new URL(request.url);
 			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
-			const sseRequest = new Request(sseUrl.toString(), request);
-			return MyMCP.serveSSE("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
+			const sseRequest = new Request(sseUrl, request);
+			return MyMCP.serveSse("/sse").fetch(sseRequest, env, ctx).then(addCorsHeaders);
 		}
 
 		// Keep /sse paths for backward compatibility
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			console.log(`[MCP] Handling direct SSE request for ${url.pathname}`);
-			return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
+			return MyMCP.serveSse("/sse").fetch(request, env, ctx).then(addCorsHeaders);
 		}
 
 		// Handle /mcp path for direct MCP connections
