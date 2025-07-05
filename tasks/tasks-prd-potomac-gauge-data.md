@@ -166,12 +166,24 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [ ] 4.6 Fix datum format confusion in `get_potomac_gage_depth` tool response
     - **Problem**: Tool currently shows both NAVD88 and WMLW values for current reading, but 7-day range doesn't specify which datum it uses, causing user confusion
     - **Solution**: Standardize on single datum format (NAVD88) for both current reading and 7-day range to eliminate ambiguity
-  - [ ] 4.6.1 Update water level tool to use only NAVD88 datum format in response text
-  - [ ] 4.6.2 Remove WMLW datum from response text to eliminate confusion
-  - [ ] 4.6.3 Ensure 7-day range explicitly states it's in NAVD88 format
-  - [ ] 4.6.4 Update response text format to: "Current: X.X feet (NAVD88), 7-day range: X.X to X.X feet (NAVD88)"
-  - [ ] 4.6.5 Test updated response format for clarity and consistency
-  - [ ] 4.6.6 Update tool description to guide AI clients to explain relationship between current level and 7-day range
+    - [x] 4.6.1 Update water level tool to use only NAVD88 datum format in response text
+      - **Solution**: Removed dual datum display (NAVD88 and WMLW) from response text, keeping only NAVD88 for consistency
+      - **Result**: Response now shows single, clear format: "Current: X.X feet (NAVD88)"
+    - [x] 4.6.2 Remove WMLW datum from response text to eliminate confusion
+      - **Solution**: Eliminated WMLW display from human-readable text while maintaining WMLW in structured data for compatibility
+      - **Result**: No more confusion about which datum the 7-day range represents
+    - [x] 4.6.3 Ensure 7-day range explicitly states it's in NAVD88 format
+      - **Solution**: Updated range text to explicitly state datum: "7-day range: X.X to X.X feet (NAVD88)"
+      - **Result**: Clear indication that both current reading and historical range use same datum
+    - [x] 4.6.4 Update response text format to: "Current: X.X feet (NAVD88), 7-day range: X.X to X.X feet (NAVD88)"
+      - **Solution**: Implemented exact format requested with consistent NAVD88 labeling throughout
+      - **Result**: Standardized format eliminates user confusion about datum consistency
+    - [x] 4.6.5 Test updated response format for clarity and consistency
+      - **Finding**: New format provides clear, unambiguous information with consistent datum labeling
+      - **Result**: Response format is now: "Current: X.X feet (NAVD88)\nTimestamp: [ISO timestamp]\n7-day range: X.X to X.X feet (NAVD88)"
+    - [x] 4.6.6 Update tool description to guide AI clients to explain relationship between current level and 7-day range
+        - **Solution**: Updated tool description from technical format to user-friendly instruction: "Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range."
+        - **Result**: AI clients will now receive explicit guidance to provide contextual explanations rather than just raw data
   - [ ] 4.7 Implement `get_potomac_flow` tool in `src/tools/potomac-flow.ts`
   - [ ] 4.8 Add concurrent fetching of current and historical flow rate data
   - [ ] 4.9 Calculate 7-day min/max from historical discharge data

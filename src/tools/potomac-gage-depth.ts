@@ -91,16 +91,15 @@ export async function getPotomacGageDepth(
       stale: isStale
     };
     
-    // Create human-readable text content
+    // Create human-readable text content with consistent NAVD88 format
     const staleness = isStale ? ` (Data is ${Math.round(ageMinutes)} minutes old and may be stale)` : "";
     const range = sevenDayMax > sevenDayMin ? 
-      ` The 7-day range is ${sevenDayMin.toFixed(1)} to ${sevenDayMax.toFixed(1)} feet.` : 
+      ` 7-day range: ${sevenDayMin.toFixed(1)} to ${sevenDayMax.toFixed(1)} feet (NAVD88).` : 
       "";
     
     const textContent = `Current Potomac River water level at Georgetown (USGS Station 01647600):
-- NAVD88: ${waterLevelData.navd88_ft.toFixed(1)} feet
-- WMLW: ${waterLevelData.wmlw_ft.toFixed(1)} feet
-- Timestamp: ${waterLevelData.timestamp}${staleness}${range}`;
+Current: ${waterLevelData.navd88_ft.toFixed(1)} feet (NAVD88)
+Timestamp: ${waterLevelData.timestamp}${staleness}${range}`;
     
     return {
       content: [{ type: "text", text: textContent }]
