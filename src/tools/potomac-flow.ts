@@ -76,20 +76,32 @@ export async function getPotomacFlow(
       // 90-minute data with fallback
       (async () => {
         try {
-          // Check if cache method exists before calling
-          if (typeof cacheService.cache90MinuteFlowRate === 'function') {
+          // Check if both cache and API methods exist
+          if (typeof cacheService.cache90MinuteFlowRate === 'function' && 
+              typeof usgsService.get90MinuteFlowRatePoints === 'function') {
             return await cacheService.cache90MinuteFlowRate(
               '90-minute-flow-rate',
               () => usgsService.get90MinuteFlowRatePoints(),
               cacheHeaders
             );
-          } else {
-            // Method doesn't exist, use direct API call
+          } else if (typeof usgsService.get90MinuteFlowRatePoints === 'function') {
+            // Cache method doesn't exist, use direct API call
             return await usgsService.get90MinuteFlowRatePoints();
+          } else {
+            // 90-minute API method doesn't exist, return empty array for graceful degradation
+            console.warn('90-minute flow rate method not available, trend analysis disabled');
+            return [];
           }
         } catch (error) {
-          // Fallback to direct API call if cache fails
-          return await usgsService.get90MinuteFlowRatePoints();
+          // Fallback: try direct API call if available, otherwise return empty array
+          try {
+            if (typeof usgsService.get90MinuteFlowRatePoints === 'function') {
+              return await usgsService.get90MinuteFlowRatePoints();
+            }
+          } catch (fallbackError) {
+            console.warn('90-minute flow rate fallback failed, trend analysis disabled');
+          }
+          return [];
         }
       })()
     ]);

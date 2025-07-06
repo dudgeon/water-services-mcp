@@ -77,20 +77,32 @@ export async function getPotomacGageDepth(
       // 90-minute data with fallback
       (async () => {
         try {
-          // Check if cache method exists before calling
-          if (typeof cacheService.cache90MinuteWaterLevel === 'function') {
+          // Check if both cache and API methods exist
+          if (typeof cacheService.cache90MinuteWaterLevel === 'function' && 
+              typeof usgsService.get90MinuteWaterLevelPoints === 'function') {
             return await cacheService.cache90MinuteWaterLevel(
               '90-minute-water-level',
               () => usgsService.get90MinuteWaterLevelPoints(),
               cacheHeaders
             );
-          } else {
-            // Method doesn't exist, use direct API call
+          } else if (typeof usgsService.get90MinuteWaterLevelPoints === 'function') {
+            // Cache method doesn't exist, use direct API call
             return await usgsService.get90MinuteWaterLevelPoints();
+          } else {
+            // 90-minute API method doesn't exist, return empty array for graceful degradation
+            console.warn('90-minute water level method not available, trend analysis disabled');
+            return [];
           }
         } catch (error) {
-          // Fallback to direct API call if cache fails
-          return await usgsService.get90MinuteWaterLevelPoints();
+          // Fallback: try direct API call if available, otherwise return empty array
+          try {
+            if (typeof usgsService.get90MinuteWaterLevelPoints === 'function') {
+              return await usgsService.get90MinuteWaterLevelPoints();
+            }
+          } catch (fallbackError) {
+            console.warn('90-minute water level fallback failed, trend analysis disabled');
+          }
+          return [];
         }
       })()
     ]);
