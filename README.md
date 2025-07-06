@@ -12,6 +12,15 @@ The server provides the following tools:
 
 ## Server Endpoints
 
+This server uses a **proven routing pattern** that works reliably with Claude Desktop:
+
+- **`/` (root)** - Redirects to SSE endpoint for client compatibility
+- **`/message`** - Redirects to SSE message endpoint
+- **`/sse`** - **Primary SSE endpoint** (use this for Claude Desktop connections)
+- **`/sse/message`** - SSE message handling endpoint
+- **`/mcp`** - Direct MCP protocol endpoint (alternative transport)
+
+**Live URLs:**
 - **SSE Stream**: `https://water-services-mcp.dudgeon.workers.dev/sse`
 - **Direct MCP**: `https://water-services-mcp.dudgeon.workers.dev/mcp`
 - **Base URL**: `https://water-services-mcp.dudgeon.workers.dev/` (redirects to SSE)
@@ -90,4 +99,34 @@ npm run deploy
 - **Protocol**: Model Context Protocol (MCP) v1.13.1
 - **Transport**: Server-Sent Events (SSE) and direct MCP
 - **Authentication**: None required (authless)
-- **CORS**: Configured for all origins with MCP-specific headers
+- **CORS**: Minimal configuration for maximum compatibility
+
+## Critical Configuration (DO NOT MODIFY)
+
+This server configuration has been **proven to work** with Claude Desktop. The following settings are critical for maintaining connectivity:
+
+### CORS Headers (Minimal & Working)
+```javascript
+"Access-Control-Allow-Origin": "*"
+"Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+"Access-Control-Allow-Headers": "Content-Type, Authorization"
+```
+
+**⚠️ IMPORTANT:** Do NOT add MCP-specific headers like `mcp-session-id` or `mcp-protocol-version` to CORS configuration. These cause Claude Desktop connection failures.
+
+### Routing Pattern (Proven & Stable)
+The exact routing implementation matches the working penguin-bank-mcp pattern:
+
+1. **Root paths** (`/`, `/message`) redirect to SSE endpoints
+2. **SSE endpoints** (`/sse`, `/sse/message`) handle Server-Sent Events
+3. **MCP endpoint** (`/mcp`) provides direct MCP protocol access
+4. **Simple logic** without complex POST request handling
+
+### Connection Sequence
+Claude Desktop expects this specific handshake:
+1. Client connects to `/sse` endpoint
+2. Server responds with proper CORS headers (minimal set only)
+3. SSE connection established using `McpAgent.serveSSE()`
+4. MCP protocol negotiation occurs over SSE transport
+
+**⚠️ WARNING:** Any modifications to CORS headers or routing logic may break Claude Desktop connectivity. This configuration has been tested and verified to work.

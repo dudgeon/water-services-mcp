@@ -1094,6 +1094,39 @@ export class CacheService {
     });
   }
 
+  // 90-minute cache methods for trend analysis
+  async cache90MinuteWaterLevel<T>(
+    url: string,
+    fetchFn: () => Promise<T>,
+    options?: Omit<CacheOptions, 'toolType' | 'dataType' | 'timeWindow'>
+  ): Promise<T> {
+    const toolType = 'water-level';
+    const dataType = 'current'; // Use 'current' dataType since it's recent trend data
+    return this.fetchWithCache(url, fetchFn, {
+      ...options,
+      toolType,
+      dataType,
+      timeWindow: this.getTimeWindowForType('current'), // Use current time window for recent trend data
+      ttl: this.validateTtl(options?.ttl || this.getTtlForType(toolType, 'current'))
+    });
+  }
+
+  async cache90MinuteFlowRate<T>(
+    url: string,
+    fetchFn: () => Promise<T>,
+    options?: Omit<CacheOptions, 'toolType' | 'dataType' | 'timeWindow'>
+  ): Promise<T> {
+    const toolType = 'flow-rate';
+    const dataType = 'current'; // Use 'current' dataType since it's recent trend data
+    return this.fetchWithCache(url, fetchFn, {
+      ...options,
+      toolType,
+      dataType,
+      timeWindow: this.getTimeWindowForType('current'), // Use current time window for recent trend data
+      ttl: this.validateTtl(options?.ttl || this.getTtlForType(toolType, 'current'))
+    });
+  }
+
   /**
    * Enhanced helper method for caching combined conditions data with fallback result
    */

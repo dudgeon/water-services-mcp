@@ -111,6 +111,50 @@ export class USGSApiService {
   }
 
   /**
+   * Fetch 90-minute historical water level data for trend analysis
+   * @returns Promise<WaterLevelHistoricalPoint[]>
+   */
+  async get90MinuteWaterLevelPoints(): Promise<WaterLevelHistoricalPoint[]> {
+    const url = this.buildUrl({
+      sites: USGS_STATIONS.POTOMAC_GEORGETOWN.id,
+      parameterCd: USGS_PARAMETER_CODES.GAGE_HEIGHT,
+      format: 'json',
+      period: 'PT90M', // 90 minutes in ISO 8601 format
+      siteStatus: 'all'
+    });
+
+    try {
+      const response = await this.fetchWithTimeout(url, this.historicalTimeout);
+      return this.parseHistoricalWaterLevelResponse(response);
+    } catch (error) {
+      console.error('Failed to fetch 90-minute water level:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch 90-minute historical flow rate data for trend analysis
+   * @returns Promise<FlowRateHistoricalPoint[]>
+   */
+  async get90MinuteFlowRatePoints(): Promise<FlowRateHistoricalPoint[]> {
+    const url = this.buildUrl({
+      sites: USGS_STATIONS.POTOMAC_LITTLE_FALLS.id,
+      parameterCd: USGS_PARAMETER_CODES.DISCHARGE,
+      format: 'json',
+      period: 'PT90M', // 90 minutes in ISO 8601 format
+      siteStatus: 'all'
+    });
+
+    try {
+      const response = await this.fetchWithTimeout(url, this.historicalTimeout);
+      return this.parseHistoricalFlowRateResponse(response);
+    } catch (error) {
+      console.error('Failed to fetch 90-minute flow rate:', error);
+      return [];
+    }
+  }
+
+  /**
    * Build USGS API URL with query parameters
    */
   private buildUrl(params: Record<string, string>): string {
