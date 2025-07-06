@@ -44,23 +44,55 @@ export async function getPotomacGageDepth(
     // Extract cache refresh headers if request is provided
     const cacheHeaders = request ? CacheService.extractCacheHeaders(request) : {};
     
-    // Fetch current, historical, and 90-minute data concurrently
+    // Fetch current, historical, and 90-minute data concurrently with fallback
     const [currentReading, historicalData, ninetyMinuteData] = await Promise.all([
-      cacheService.cacheCurrentWaterLevel(
-        'current-water-level',
-        () => usgsService.getCurrentWaterLevel(),
-        cacheHeaders
-      ),
-      cacheService.cacheHistoricalWaterLevel(
-        'historical-water-level',
-        () => usgsService.getHistoricalWaterLevelPoints(),
-        cacheHeaders
-      ),
-      cacheService.cache90MinuteWaterLevel(
-        '90-minute-water-level',
-        () => usgsService.get90MinuteWaterLevelPoints(),
-        cacheHeaders
-      )
+      // Current data with fallback
+      (async () => {
+        try {
+          return await cacheService.cacheCurrentWaterLevel(
+            'current-water-level',
+            () => usgsService.getCurrentWaterLevel(),
+            cacheHeaders
+          );
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.getCurrentWaterLevel();
+        }
+      })(),
+      
+      // Historical data with fallback  
+      (async () => {
+        try {
+          return await cacheService.cacheHistoricalWaterLevel(
+            'historical-water-level',
+            () => usgsService.getHistoricalWaterLevelPoints(),
+            cacheHeaders
+          );
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.getHistoricalWaterLevelPoints();
+        }
+      })(),
+      
+      // 90-minute data with fallback
+      (async () => {
+        try {
+          // Check if cache method exists before calling
+          if (typeof cacheService.cache90MinuteWaterLevel === 'function') {
+            return await cacheService.cache90MinuteWaterLevel(
+              '90-minute-water-level',
+              () => usgsService.get90MinuteWaterLevelPoints(),
+              cacheHeaders
+            );
+          } else {
+            // Method doesn't exist, use direct API call
+            return await usgsService.get90MinuteWaterLevelPoints();
+          }
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.get90MinuteWaterLevelPoints();
+        }
+      })()
     ]);
     
     // Handle case where current reading is not available

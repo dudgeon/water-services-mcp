@@ -43,23 +43,55 @@ export async function getPotomacFlow(
     // Extract cache refresh headers if request is provided
     const cacheHeaders = request ? CacheService.extractCacheHeaders(request) : {};
     
-    // Fetch current, historical, and 90-minute data concurrently
+    // Fetch current, historical, and 90-minute data concurrently with fallback
     const [currentReading, historicalData, ninetyMinuteData] = await Promise.all([
-      cacheService.cacheCurrentFlowRate(
-        'current-flow-rate',
-        () => usgsService.getCurrentFlowRate(),
-        cacheHeaders
-      ),
-      cacheService.cacheHistoricalFlowRate(
-        'historical-flow-rate',
-        () => usgsService.getHistoricalFlowRatePoints(),
-        cacheHeaders
-      ),
-      cacheService.cache90MinuteFlowRate(
-        '90-minute-flow-rate',
-        () => usgsService.get90MinuteFlowRatePoints(),
-        cacheHeaders
-      )
+      // Current data with fallback
+      (async () => {
+        try {
+          return await cacheService.cacheCurrentFlowRate(
+            'current-flow-rate',
+            () => usgsService.getCurrentFlowRate(),
+            cacheHeaders
+          );
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.getCurrentFlowRate();
+        }
+      })(),
+      
+      // Historical data with fallback  
+      (async () => {
+        try {
+          return await cacheService.cacheHistoricalFlowRate(
+            'historical-flow-rate',
+            () => usgsService.getHistoricalFlowRatePoints(),
+            cacheHeaders
+          );
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.getHistoricalFlowRatePoints();
+        }
+      })(),
+      
+      // 90-minute data with fallback
+      (async () => {
+        try {
+          // Check if cache method exists before calling
+          if (typeof cacheService.cache90MinuteFlowRate === 'function') {
+            return await cacheService.cache90MinuteFlowRate(
+              '90-minute-flow-rate',
+              () => usgsService.get90MinuteFlowRatePoints(),
+              cacheHeaders
+            );
+          } else {
+            // Method doesn't exist, use direct API call
+            return await usgsService.get90MinuteFlowRatePoints();
+          }
+        } catch (error) {
+          // Fallback to direct API call if cache fails
+          return await usgsService.get90MinuteFlowRatePoints();
+        }
+      })()
     ]);
     
     // Handle case where current reading is not available
