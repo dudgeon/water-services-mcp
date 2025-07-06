@@ -13,7 +13,10 @@ export const WaterLevelOutputSchema = z.object({
   timestamp: z.string().describe("ISO 8601 timestamp of the reading"),
   seven_day_min_ft: z.number().describe("7-day minimum gage height in NAVD88 datum (feet)"),
   seven_day_max_ft: z.number().describe("7-day maximum gage height in NAVD88 datum (feet)"),
-  stale: z.boolean().describe("True if data is older than 30 minutes")
+  stale: z.boolean().describe("True if data is older than 30 minutes"),
+  trend_direction: z.enum(["rising", "falling", "stable"]).describe("Trend direction compared to 90 minutes ago"),
+  trend_change_ft: z.number().describe("Change in feet from 90 minutes ago (positive = rising, negative = falling)"),
+  reading_90min_ago_ft: z.number().optional().describe("Reading from approximately 90 minutes ago in NAVD88 datum (feet)")
 });
 
 export type WaterLevelOutput = z.infer<typeof WaterLevelOutputSchema>;
@@ -41,8 +44,8 @@ export async function getPotomacGageDepth(
     // Extract cache refresh headers if request is provided
     const cacheHeaders = request ? CacheService.extractCacheHeaders(request) : {};
     
-    // Fetch current and historical water level data concurrently
-    const [currentReading, historicalData] = await Promise.all([
+    // Fetch current, historical, and 90-minute data concurrently
+    const [currentReading, historicalData, ninetyMinuteData] = await Promise.all([
       cacheService.cacheCurrentWaterLevel(
         'current-water-level',
         () => usgsService.getCurrentWaterLevel(),
@@ -51,6 +54,11 @@ export async function getPotomacGageDepth(
       cacheService.cacheHistoricalWaterLevel(
         'historical-water-level',
         () => usgsService.getHistoricalWaterLevelPoints(),
+        cacheHeaders
+      ),
+      cacheService.cache90MinuteWaterLevel(
+        '90-minute-water-level',
+        () => usgsService.get90MinuteWaterLevelPoints(),
         cacheHeaders
       )
     ]);
@@ -75,6 +83,33 @@ export async function getPotomacGageDepth(
       }
     }
     
+    // Calculate trend from 90-minute data
+    let trendDirection: "rising" | "falling" | "stable" = "stable";
+    let trendChangeFt = 0;
+    let reading90MinAgo: number | undefined;
+    
+    if (ninetyMinuteData && Array.isArray(ninetyMinuteData) && ninetyMinuteData.length > 0) {
+      // Find reading closest to 90 minutes ago (sort by timestamp and take oldest)
+      const validPoints = ninetyMinuteData
+        .filter((point: WaterLevelHistoricalPoint) => !isNaN(point.navd88_ft))
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
+      if (validPoints.length > 0) {
+        const oldestPoint = validPoints[0];
+        reading90MinAgo = oldestPoint.navd88_ft;
+        trendChangeFt = currentReading.navd88_ft - reading90MinAgo;
+        
+        // Determine trend direction (threshold of 0.01 ft to account for measurement precision)
+        if (Math.abs(trendChangeFt) < 0.01) {
+          trendDirection = "stable";
+        } else if (trendChangeFt > 0) {
+          trendDirection = "rising";
+        } else {
+          trendDirection = "falling";
+        }
+      }
+    }
+
     // Implement staleness detection (>30 minutes old)
     const readingTime = new Date(currentReading.timestamp);
     const now = new Date();
@@ -88,18 +123,32 @@ export async function getPotomacGageDepth(
       timestamp: currentReading.timestamp,
       seven_day_min_ft: sevenDayMin,
       seven_day_max_ft: sevenDayMax,
-      stale: isStale
+      stale: isStale,
+      trend_direction: trendDirection,
+      trend_change_ft: trendChangeFt,
+      reading_90min_ago_ft: reading90MinAgo
     };
     
     // Create human-readable text content with consistent NAVD88 format
     const staleness = isStale ? ` (Data is ${Math.round(ageMinutes)} minutes old and may be stale)` : "";
     const range = sevenDayMax > sevenDayMin ? 
-      ` 7-day range: ${sevenDayMin.toFixed(1)} to ${sevenDayMax.toFixed(1)} feet (NAVD88).` : 
+      ` 7-day range: ${sevenDayMin.toFixed(1)} to ${sevenDayMax.toFixed(1)} feet.` : 
       "";
     
-    const textContent = `Current Potomac River water level at Georgetown (USGS Station 01647600):
-Current: ${waterLevelData.navd88_ft.toFixed(1)} feet (NAVD88)
-Timestamp: ${waterLevelData.timestamp}${staleness}${range}`;
+    // Create trend description
+    let trendText = "";
+    if (reading90MinAgo !== undefined) {
+      const changeText = Math.abs(trendChangeFt) > 0.01 ? 
+        ` (${trendChangeFt >= 0 ? '+' : ''}${trendChangeFt.toFixed(2)} ft from 90 min ago)` : 
+        " (stable from 90 min ago)";
+      trendText = ` Trend: ${trendDirection}${changeText}`;
+    }
+    
+    const textContent = `Current Potomac River water level at Georgetown:
+Current: ${waterLevelData.navd88_ft.toFixed(1)} feet
+Timestamp: ${waterLevelData.timestamp}${staleness}${range}${trendText}
+
+💡 For technical details about measurement methods, datums, and station specifications, use the get_measurement_info tool.`;
     
     return {
       content: [{ type: "text", text: textContent }]

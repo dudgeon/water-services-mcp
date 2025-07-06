@@ -2,6 +2,8 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getPotomacGageDepth, GetPotomacGageDepthSchema, WaterLevelOutputSchema } from "./tools/potomac-gage-depth.js";
+import { getPotomacFlow, GetPotomacFlowSchema, FlowRateOutputSchema } from "./tools/potomac-flow.js";
+import { getMeasurementInfo, GetMeasurementInfoSchema, MeasurementInfoOutputSchema } from "./tools/measurement-info.js";
 
 
 // Define our MCP agent with tools
@@ -99,10 +101,42 @@ export class MyMCP extends McpAgent {
 		// Potomac water level tool
 		this.server.tool(
 			"get_potomac_gage_depth",
-			"Get current Potomac River depth at Georgetown. IMPORTANT: When presenting this data, explain the relationship between the current level and the 7-day range.",
-			GetPotomacGageDepthSchema,
+			{},
 			async (params) => {
 				return await getPotomacGageDepth(params);
+			}
+		);
+
+		// Potomac flow rate tool
+		this.server.tool(
+			"get_potomac_flow",
+			{},
+			async (params) => {
+				return await getPotomacFlow(params);
+			}
+		);
+
+		// Measurement methodology documentation tool
+		this.server.tool(
+			"get_measurement_info",
+			{
+				topic: z.enum([
+					"water_level_methodology",
+					"flow_rate_methodology", 
+					"stations",
+					"units_datums",
+					"quality_codes",
+					"data_processing",
+					"temporal_context",
+					"api_technical",
+					"overview"
+				]).optional(),
+				search_term: z.string().optional(),
+				station_id: z.string().optional(),
+				detail_level: z.enum(["overview", "detailed"]).optional()
+			},
+			async (params) => {
+				return await getMeasurementInfo(params);
 			}
 		);
 	}
