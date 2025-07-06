@@ -3,10 +3,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getPotomacGageDepth, GetPotomacGageDepthSchema, WaterLevelOutputSchema } from "./tools/potomac-gage-depth.js";
 
-// Environment interface for proper typing
-interface Env {
-	MCP_OBJECT: DurableObjectNamespace;
-}
 
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
@@ -123,8 +119,7 @@ export default {
 				headers: {
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type, Authorization, mcp-session-id, mcp-protocol-version",
-					"Access-Control-Expose-Headers": "mcp-session-id, mcp-protocol-version",
+					"Access-Control-Allow-Headers": "Content-Type, Authorization",
 					"Access-Control-Max-Age": "86400",
 				},
 			});
@@ -135,17 +130,12 @@ export default {
 			const newResponse = new Response(response.body, response);
 			newResponse.headers.set("Access-Control-Allow-Origin", "*");
 			newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, mcp-session-id, mcp-protocol-version");
-			newResponse.headers.set("Access-Control-Expose-Headers", "mcp-session-id, mcp-protocol-version");
+			newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 			return newResponse;
 		};
 
 		// Handle root path and /message for SSE connections
 		if (url.pathname === "/" || url.pathname === "/message") {
-			// For POST requests to root, handle as SSE message
-			if (request.method === "POST" && url.pathname === "/") {
-				return MyMCP.serveSSE("/sse").fetch(request, env, ctx).then(addCorsHeaders);
-			}
 			// Create a new request with /sse path for compatibility
 			const sseUrl = new URL(request.url);
 			sseUrl.pathname = url.pathname === "/" ? "/sse" : "/sse/message";
@@ -161,16 +151,6 @@ export default {
 		// Handle /mcp path for direct MCP connections
 		if (url.pathname === "/mcp") {
 			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
-		}
-
-		// Handle /messages path as alias for /mcp (some MCP clients use this)
-		if (url.pathname === "/messages") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx).then(addCorsHeaders);
-		}
-
-		// Handle OAuth discovery endpoints (return 404 to indicate no auth required)
-		if (url.pathname === "/.well-known/oauth-authorization-server" || url.pathname === "/register") {
-			return addCorsHeaders(new Response("Not found", { status: 404 }));
 		}
 
 		return new Response("Not found", { status: 404 });
