@@ -6,16 +6,10 @@ A Model Context Protocol (MCP) server deployed on Cloudflare Workers that provid
 
 The server provides the following tools:
 
-### Water Data Tools
 - `get_potomac_conditions` - **Primary tool** providing complete current conditions including water level and flow rate with historical context
 - `get_potomac_gage_depth` - Georgetown water level data with 7-day range and 90-minute trend analysis
 - `get_potomac_flow` - Little Falls flow rate data with 7-day range and 90-minute trend analysis
 - `get_measurement_info` - Technical documentation about measurement methodologies, units, and data quality
-
-### Utility Tools
-- `add` - Simple addition of two numbers
-- `calculate` - Multi-operation calculator (add, subtract, multiply, divide)
-- `local_destinations` - Information about local attractions and destinations
 
 ## USGS Data Sources
 
