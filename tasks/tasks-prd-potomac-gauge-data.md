@@ -389,15 +389,43 @@ Based on PRD: `prd-potomac-gauge-data.md`
     - **Solution**: Removed technical station numbers and datum references from main responses, added methodology tool guidance
     - **Result**: User-friendly responses with clear guidance for accessing technical documentation when needed
 
-- [ ] 5.0 Implement combined conditions tool; confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
-  - [ ] 5.1 Create `get_potomac_conditions` tool in `src/tools/potomac-conditions.ts`
-  - [ ] 5.2 Implement concurrent API calls to both USGS stations
-  - [ ] 5.3 Handle mixed data freshness scenarios (one station current, other stale)
-  - [ ] 5.4 Combine water level and flow rate data into structured response
-  - [ ] 5.5 Implement partial failure handling (return available data with indicators)
-  - [ ] 5.6 Add independent staleness detection for each data source
-  - [ ] 5.7 Optimize caching strategy (leverage individual tool caches when possible)
-  - [ ] 5.8 Register combined tool with MCP server
+- [x] 5.0 Implement combined conditions tool; confirm format in the MCP spec: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
+  - [x] 5.1 Create `get_potomac_conditions` tool in `src/tools/potomac-conditions.ts`
+    - **Implementation Strategy**: Pragmatic reuse approach maximizing existing functionality
+    - **Solution**: Created comprehensive combined conditions tool with Zod schemas, concurrent data fetching, and robust error handling
+    - **Result**: ~300-line tool providing complete water level + flow rate data with partial failure support
+  - [x] 5.2 Implement concurrent API calls to both USGS stations
+    - **Discovery**: Individual tool functions can be called directly using Promise.allSettled for optimal error handling
+    - **Solution**: Used Promise.allSettled to fetch both water level and flow rate data simultaneously with independent error handling
+    - **Result**: Concurrent data fetching with graceful degradation when one station fails
+  - [x] 5.3 Handle mixed data freshness scenarios (one station current, other stale)
+    - **Discovery**: Existing staleness detection in individual tools provides age information for combined analysis
+    - **Solution**: Implemented overall staleness calculation (fresh/mixed/stale) based on individual data ages with 30-minute threshold
+    - **Result**: Comprehensive staleness reporting with oldest/freshest data age metrics
+  - [x] 5.4 Combine water level and flow rate data into structured response
+    - **Discovery**: Existing type definitions (CombinedConditionsData, PartialConditionsData) provided perfect structure
+    - **Solution**: Used existing types with enhanced response formatting including data completeness indicators
+    - **Result**: Structured response matching PRD specification with clear section organization
+  - [x] 5.5 Implement partial failure handling (return available data with indicators)
+    - **Discovery**: Promise.allSettled allows individual tool failures without affecting overall response
+    - **Solution**: Implemented graceful degradation showing available data with clear error indicators for failed sources
+    - **Result**: Partial failure scenarios handled gracefully with data completeness levels (complete/partial/minimal)
+  - [x] 5.6 Add independent staleness detection for each data source
+    - **Discovery**: Individual tools already provide staleness detection through text parsing
+    - **Solution**: Enhanced parsing to extract age information from individual tool responses for combined analysis
+    - **Result**: Independent staleness tracking with overall assessment and detailed age metrics
+  - [x] 5.7 Optimize caching strategy (leverage individual tool caches when possible)
+    - **Discovery**: Existing cacheCombinedConditions() method provides optimal caching for combined data
+    - **Solution**: Used existing combined conditions cache with fallback to direct individual tool calls
+    - **Result**: Leveraged existing cache infrastructure with proper TTL management and fallback strategies
+  - [x] 5.8 Register combined tool with MCP server
+    - **Discovery**: MCP tool registration follows same pattern as individual tools
+    - **Solution**: Added get_potomac_conditions tool registration in src/index.ts with proper parameter handling
+    - **Result**: Tool successfully registered and available via MCP server with empty parameter schema
+  - [x] 5.9 Create comprehensive test suite for combined conditions tool
+    - **Challenge**: Complex mocking requirements for cache service and individual tools in test environment
+    - **Solution**: Created comprehensive test suite covering successful scenarios, partial failures, edge cases, and response format validation
+    - **Result**: 15+ test scenarios covering all functionality including error handling and response formatting
 
 - [ ] 6.0 Add comprehensive error handling and monitoring
   - [ ] 6.1 Create error handling utilities in `src/utils/error-handling.ts`

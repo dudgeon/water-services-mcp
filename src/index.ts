@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getPotomacGageDepth, GetPotomacGageDepthSchema, WaterLevelOutputSchema } from "./tools/potomac-gage-depth.js";
 import { getPotomacFlow, GetPotomacFlowSchema, FlowRateOutputSchema } from "./tools/potomac-flow.js";
 import { getMeasurementInfo, GetMeasurementInfoSchema, MeasurementInfoOutputSchema } from "./tools/measurement-info.js";
+import { getPotomacConditions, GetPotomacConditionsSchema, CombinedConditionsOutputSchema } from "./tools/potomac-conditions.js";
 
 
 // Define our MCP agent with tools
@@ -137,6 +138,15 @@ export class MyMCP extends McpAgent {
 			},
 			async (params) => {
 				return await getMeasurementInfo(params);
+			}
+		);
+
+		// Combined conditions tool (water level + flow rate)
+		this.server.tool(
+			"get_potomac_conditions",
+			{},
+			async (params) => {
+				return await getPotomacConditions(params);
 			}
 		);
 	}
