@@ -450,13 +450,39 @@ Based on PRD: `prd-potomac-gauge-data.md`
   - [ ] 7.10 Validate all tools work correctly with Cloudflare Worker limits
 
 - [ ] 8.0 Update landing page with new tool documentation
-  - [ ] 8.1 Update `public/index.html` to remove SSE endpoint reference from endpoints section
-  - [ ] 8.2 Add documentation for `get_potomac_gage_depth` tool with example usage
-  - [ ] 8.3 Add documentation for `get_potomac_flow` tool with example usage
-  - [ ] 8.4 Add documentation for `get_potomac_conditions` combined tool
-  - [ ] 8.5 Include JSON response format examples for each tool
-  - [ ] 8.6 Add Claude Desktop MCP server setup instructions (claude_desktop_config.json configuration)
-  - [ ] 8.7 Add usage instructions for AI agents and MCP clients
-  - [ ] 8.8 Update page title and description to reflect water services focus
-  - [ ] 8.9 Add visual map showing USGS station locations and data types (station 01647600 for water level at Georgetown, station 01646500 for flow rate at Little Falls) 
-  - [ ] 8.10 Update `public/index.html` background to use /Users/geoffreydudgeon/Documents/Cursor Projects/water-services-mcp/public/river-fish-rocks-low.jpg as static background (does not scroll with page contents)
+  - [x] 8.2 Add documentation for `get_potomac_gage_depth` tool with example usage
+    - **Solution**: Reorganized tools section to lead with combined conditions tool, positioning individual tools as focused alternatives
+    - **Result**: Water level tool now presented as "Water Level Only" for focused depth analysis, supporting the primary combined tool
+  - [x] 8.3 Add documentation for `get_potomac_flow` tool with example usage
+    - **Solution**: Added flow rate tool documentation as "Flow Rate Only" positioned as focused alternative to combined tool
+    - **Result**: Tool clearly described as Little Falls discharge analysis with 7-day range and 90-minute trend
+  - [x] 8.4 Add documentation for `get_potomac_conditions` combined tool
+    - **Solution**: Positioned combined conditions tool as primary tool with prominent full-width styling and blue highlighting
+    - **Result**: Combined tool leads the tools section with clear "Primary tool" designation and comprehensive description
+  - [x] 8.5 Include JSON response format examples for each tool
+    - **Solution**: Added comprehensive "Example Usage & Responses" section with sample queries and placeholder JSON responses for all three water tools
+    - **Result**: Users can see natural language queries that trigger each tool plus structured JSON response formats with realistic placeholder data
+    - **Finding**: Sample queries differentiate between general requests (combined tool), specific location requests (Georgetown/Little Falls), and focused analysis needs
+  - [x] 8.6 Add Claude Desktop MCP server setup instructions (claude_desktop_config.json configuration) - REMOVED
+    - **Change of Plan**: Removed Claude Desktop setup section per user request - deemed unnecessary
+    - **Result**: Page now focuses on core functionality without setup complexity
+  - [x] 8.7 Add usage instructions for AI agents and MCP clients - SKIPPED
+    - **Change of Plan**: Skipped per user request
+  - [x] 8.8 Update page title and description to reflect water services focus
+    - **Solution**: Updated page title to "Potomac River Water Data - MCP Server" and subtitle to "Real-time USGS Water Services via MCP"
+    - **Result**: Page now clearly communicates its purpose as a Potomac River data service rather than generic MCP server
+    - **Finding**: Updated description emphasizes real-time USGS data, specific stations (Georgetown/Little Falls), and key features (current conditions, historical context, trend analysis)
+  - [x] 8.9 Add visual map showing USGS station locations and data types (station 01647600 for water level at Georgetown, station 01646500 for flow rate at Little Falls)
+    - **Challenge**: Initial implementation had incorrect coordinates showing stations off coast of Argentina instead of Washington DC
+    - **Solution**: Researched exact USGS coordinates (Georgetown: 38.9033611, -77.0676667; Little Falls: 38.94977778, -77.12763889) and embedded real OpenStreetMap of DC area with JavaScript-calculated marker positioning
+    - **Result**: Users can see actual geographic locations of USGS stations precisely positioned on Washington DC area map showing Georgetown downstream from Little Falls along the Potomac River
+    - **Finding**: Georgetown station is at Wisconsin Ave, 0.6 miles upstream from Rock Creek mouth; Little Falls station is near the pump station in Montgomery County, MD
+    - **Enhancement**: Removed unnecessary legend, moved map after examples section, added descriptive paragraph about data sources, and applied MapTiler Basic-inspired styling with neutral colors and reduced contrast 
+  - [x] 8.10 Update `public/index.html` background to use /Users/geoffreydudgeon/Documents/Cursor Projects/water-services-mcp/public/river-fish-rocks-low.jpg as static background (does not scroll with page contents)
+    - **Solution**: Updated body CSS to use river-fish-rocks-low.jpg as fixed background with center positioning and cover sizing
+    - **Result**: Background image now displays as static backdrop that doesn't scroll with page content, creating immersive water theme
+    - **Finding**: Used CSS `background-attachment: fixed` property with `background-size: cover` for optimal display across devices
+  - [x] 8.11 Update static page color scheme to complement river-fish-rocks background image
+    - **Solution**: Implemented comprehensive color palette using CSS custom properties inspired by river scene with soft aqua greens, navy blues, warm oranges, and bamboo beiges
+    - **Result**: Harmonious color scheme that complements the river background while maintaining excellent readability and professional appearance
+    - **Finding**: Used semi-transparent backgrounds with backdrop-filter blur effects to create layered depth while preserving background image visibility

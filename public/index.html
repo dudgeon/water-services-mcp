@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Services MCP</title>
+    <title>Potomac River Water Data - MCP Server</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        :root {
+            /* River background reference colors */
+            --river-aqua: #B4D8C3;
+            --deep-navy: #1E2F2F;
+            --charcoal-ink: #2C3E3E;
+            
+            /* Accent colors */
+            --koi-orange: #E67E22;
+            --indigo-fish: #324D5C;
+            --bamboo-beige: #F5ECD9;
+            --warm-stone: #D6B470;
+            
+            /* Interactive elements */
+            --leaf-green: #5C9E8A;
+            --wave-hover: #A6C4B6;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -14,8 +32,10 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--deep-navy);
+            background: url('./river-fish-rocks-low.jpg') center center fixed;
+            background-size: cover;
+            background-repeat: no-repeat;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,11 +44,12 @@
         
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 4rem auto;
             padding: 2rem;
-            background: white;
+            background: rgba(245, 236, 217, 0.95);
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(30, 47, 47, 0.2);
+            backdrop-filter: blur(10px);
         }
         
         .header {
@@ -37,23 +58,24 @@
         }
         
         h1 {
-            color: #2c3e50;
+            color: var(--deep-navy);
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
         }
         
         .subtitle {
-            color: #7f8c8d;
+            color: var(--charcoal-ink);
             font-size: 1.2rem;
             margin-bottom: 2rem;
         }
         
         .mcp-info {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.8);
             padding: 1.5rem;
             border-radius: 10px;
             margin-bottom: 2rem;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--leaf-green);
+            backdrop-filter: blur(5px);
         }
         
         .endpoints {
@@ -64,23 +86,51 @@
         }
         
         .endpoint {
-            background: #e8f4f8;
+            background: rgba(255, 255, 255, 0.7);
             padding: 1rem;
             border-radius: 8px;
-            border: 1px solid #d1ecf1;
+            border: 1px solid var(--wave-hover);
+            backdrop-filter: blur(3px);
         }
         
         .endpoint h3 {
-            color: #0c5460;
+            color: var(--indigo-fish);
             margin-bottom: 0.5rem;
         }
         
         .endpoint code {
-            background: #f1f3f4;
+            background: var(--bamboo-beige);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             font-size: 0.9rem;
             word-break: break-all;
+            color: var(--deep-navy);
+        }
+        
+        .url-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .copy-button {
+            background: var(--leaf-green);
+            color: white;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .copy-button:hover {
+            background: var(--wave-hover);
+        }
+        
+        .copy-button.copied {
+            background: var(--koi-orange);
         }
         
         .tools {
@@ -94,28 +144,38 @@
         }
         
         .tool {
-            background: #fff3cd;
+            background: rgba(255, 255, 255, 0.8);
             padding: 1rem;
             border-radius: 8px;
-            border: 1px solid #ffeaa7;
+            border: 1px solid var(--wave-hover);
+            backdrop-filter: blur(3px);
         }
         
         .tool h4 {
-            color: #856404;
+            color: var(--charcoal-ink);
             margin-bottom: 0.5rem;
+        }
+        
+        .tool.primary {
+            background: rgba(180, 216, 195, 0.3);
+            border: 2px solid var(--leaf-green);
+        }
+        
+        .tool.primary h4 {
+            color: var(--deep-navy);
         }
         
         .footer {
             text-align: center;
             margin-top: 2rem;
             padding-top: 2rem;
-            border-top: 1px solid #eee;
-            color: #7f8c8d;
+            border-top: 1px solid var(--wave-hover);
+            color: var(--charcoal-ink);
         }
         
         .status-badge {
             display: inline-block;
-            background: #28a745;
+            background: var(--leaf-green);
             color: white;
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
@@ -130,64 +190,349 @@
             border-left: 3px solid #ffc107;
             margin: 1rem 0;
         }
+        
+        .examples {
+            margin-top: 2rem;
+        }
+        
+        .example-section {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--indigo-fish);
+            backdrop-filter: blur(5px);
+        }
+        
+        .example-query {
+            margin-bottom: 1rem;
+        }
+        
+        .example-query ul {
+            margin: 0.5rem 0 0 1rem;
+            color: var(--charcoal-ink);
+        }
+        
+        .example-query li {
+            margin: 0.3rem 0;
+            font-style: italic;
+        }
+        
+        .example-response pre {
+            background: var(--charcoal-ink);
+            color: var(--bamboo-beige);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin: 0.5rem 0 0 0;
+        }
+        
+        .example-response code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+        
+        .station-map {
+            margin: 2rem 0;
+        }
+        
+        .map-intro {
+            color: var(--charcoal-ink);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        
+        .station-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .legend-marker {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .georgetown-dot {
+            background: var(--koi-orange);
+        }
+        
+        .little-falls-dot {
+            background: var(--leaf-green);
+        }
+        
+        @media (max-width: 768px) {
+            .real-map iframe {
+                height: 300px;
+            }
+            
+            .station-legend {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌊 Water Services MCP</h1>
-            <p class="subtitle">Model Context Protocol Server</p>
+            <h1>🌊 Potomac River Water Data</h1>
+            <p class="subtitle">Real-time USGS Water Services via MCP</p>
             <span class="status-badge">🟢 Online</span>
         </div>
         
         <div class="mcp-info">
-            <h2>About This MCP Server</h2>
-            <p>This is a Model Context Protocol (MCP) server running on Cloudflare Workers. It provides various tools and services that can be used by MCP clients like Claude Desktop, Cursor, and other AI assistants.</p>
+            <h2>About This Service</h2>
+            <p>This Model Context Protocol (MCP) server provides real-time Potomac River water level and flow data from USGS stations. Get current conditions, historical context, and trend analysis for Georgetown and Little Falls monitoring stations.</p>
         </div>
         
         <div class="endpoints">
             <div class="endpoint">
                 <h3>🔗 MCP Endpoint</h3>
                 <p>Main MCP protocol endpoint</p>
-                <code>https://water-services-mcp.dudgeon.workers.dev/</code>
+                <div class="url-container">
+                    <code>https://water-services-mcp.dudgeon.workers.dev/</code>
+                    <button class="copy-button" onclick="copyToClipboard('https://water-services-mcp.dudgeon.workers.dev/', this)">Copy</button>
+                </div>
             </div>
             
             <div class="endpoint">
                 <h3>📡 SSE Endpoint</h3>
                 <p>Server-Sent Events endpoint</p>
-                <code>https://water-services-mcp.dudgeon.workers.dev/sse</code>
+                <div class="url-container">
+                    <code>https://water-services-mcp.dudgeon.workers.dev/sse</code>
+                    <button class="copy-button" onclick="copyToClipboard('https://water-services-mcp.dudgeon.workers.dev/sse', this)">Copy</button>
+                </div>
             </div>
         </div>
         
         <div class="tools">
             <h2>Available Tools</h2>
             <div class="tool-list">
-                <div class="tool">
-                    <h4>🧮 Calculator</h4>
-                    <p>Basic arithmetic operations: add, subtract, multiply, divide</p>
+                <div class="tool primary" style="grid-column: 1 / -1;">
+                    <h4>🌊 Potomac River Conditions</h4>
+                    <p><strong>get_potomac_conditions</strong> - Complete current conditions including water level and flow rate with historical context and trend analysis</p>
+                    <small><strong>Primary tool:</strong> Provides comprehensive overview from both Georgetown and Little Falls stations</small>
                 </div>
                 
                 <div class="tool">
-                    <h4>➕ Add</h4>
-                    <p>Simple addition of two numbers</p>
+                    <h4>📏 Water Level Only</h4>
+                    <p><strong>get_potomac_gage_depth</strong> - Georgetown water level with 7-day range and 90-minute trend</p>
+                    <small>For focused water depth analysis</small>
                 </div>
                 
                 <div class="tool">
-                    <h4>🏔️ Local Destinations</h4>
-                    <p>Information about local attractions, featuring the Three Sisters</p>
+                    <h4>🌊 Flow Rate Only</h4>
+                    <p><strong>get_potomac_flow</strong> - Little Falls flow rate with 7-day range and 90-minute trend</p>
+                    <small>For focused discharge analysis</small>
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h2>Example Usage & Responses</h2>
+            
+            <div class="example-section">
+                <h3>🌊 Combined River Conditions</h3>
+                <div class="example-query">
+                    <strong>Sample queries:</strong>
+                    <ul>
+                        <li>"What are the current Potomac River conditions?"</li>
+                        <li>"Check water level and flow rate for the Potomac"</li>
+                        <li>"How is the river looking today?"</li>
+                    </ul>
+                </div>
+                <div class="example-response">
+                    <strong>JSON Response Format:</strong>
+                    <pre><code>{
+  "water_level": {
+    "navd88_ft": 2.45,
+    "timestamp": "2025-01-07T10:30:00Z",
+    "seven_day_min_ft": 1.89,
+    "seven_day_max_ft": 3.12,
+    "trend_direction": "rising",
+    "trend_change_ft": 0.08,
+    "stale": false
+  },
+  "flow_rate": {
+    "discharge_cfs": 16850,
+    "timestamp": "2025-01-07T10:15:00Z",
+    "seven_day_min_cfs": 12400,
+    "seven_day_max_cfs": 18900,
+    "trend_direction": "stable",
+    "trend_change_cfs": -45,
+    "stale": false
+  },
+  "data_completeness": "complete",
+  "overall_staleness": "fresh"
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="example-section">
+                <h3>📏 Water Level Only</h3>
+                <div class="example-query">
+                    <strong>Sample queries:</strong>
+                    <ul>
+                        <li>"What's the water level at Georgetown?"</li>
+                        <li>"How deep is the Potomac right now?"</li>
+                        <li>"Check current water depth"</li>
+                    </ul>
+                </div>
+                <div class="example-response">
+                    <strong>JSON Response Format:</strong>
+                    <pre><code>{
+  "navd88_ft": 2.45,
+  "wmlw_ft": 4.92,
+  "timestamp": "2025-01-07T10:30:00Z",
+  "seven_day_min_ft": 1.89,
+  "seven_day_max_ft": 3.12,
+  "trend_direction": "rising",
+  "trend_change_ft": 0.08,
+  "reading_90min_ago_ft": 2.37,
+  "stale": false
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="example-section">
+                <h3>🌊 Flow Rate Only</h3>
+                <div class="example-query">
+                    <strong>Sample queries:</strong>
+                    <ul>
+                        <li>"What's the flow rate at Little Falls?"</li>
+                        <li>"How fast is the Potomac flowing?"</li>
+                        <li>"Check current discharge rate"</li>
+                    </ul>
+                </div>
+                <div class="example-response">
+                    <strong>JSON Response Format:</strong>
+                    <pre><code>{
+  "discharge_cfs": 16850,
+  "timestamp": "2025-01-07T10:15:00Z",
+  "seven_day_min_cfs": 12400,
+  "seven_day_max_cfs": 18900,
+  "trend_direction": "stable",
+  "trend_change_cfs": -45,
+  "reading_90min_ago_cfs": 16895,
+  "stale": false
+}</code></pre>
                 </div>
             </div>
         </div>
         
-        <div class="highlight">
-            <h3>🎯 Featured Destination: Three Sisters</h3>
-            <p>Ask about local destinations to learn about the stunning Three Sisters mountain range - perfect for hiking and scenic views!</p>
+        <div class="station-map">
+            <h2>USGS Monitoring Stations</h2>
+            <p class="map-intro">This MCP server provides real-time data from two USGS monitoring stations along the Potomac River. These stations continuously collect water level and flow rate measurements that power our water data tools.</p>
+            
+            <div id="potomac-map" style="height: 400px; border-radius: 8px; overflow: hidden;"></div>
+            <div class="station-legend">
+                <div class="legend-item">
+                    <span class="legend-marker georgetown-dot"></span>
+                    <span><strong>Georgetown (01647600):</strong> Water level monitoring</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker little-falls-dot"></span>
+                    <span><strong>Little Falls (01646500):</strong> Flow rate monitoring</span>
+                </div>
+            </div>
         </div>
+        
         
         <div class="footer">
             <p>Powered by Cloudflare Workers & Pages</p>
             <p>Model Context Protocol Server v1.0.0</p>
         </div>
     </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(function() {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy text: ', err);
+                button.textContent = 'Failed';
+                setTimeout(function() {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+        
+        // Initialize Leaflet map with USGS stations
+        function initMap() {
+            // Center map between the two stations
+            const map = L.map('potomac-map').setView([38.925, -77.1], 12);
+            
+            // Add OpenStreetMap tiles with neutral styling
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            
+            // Georgetown Station marker (Water Level)
+            const georgetownMarker = L.marker([38.9033611, -77.0676667], {
+                title: 'Georgetown Station - Water Level'
+            }).addTo(map);
+            georgetownMarker.bindPopup(`
+                <div style="text-align: center; font-weight: bold;">
+                    📏 Georgetown Station<br>
+                    <strong>01647600</strong><br>
+                    Water Level Monitoring<br>
+                    <small>NAVD88 & WMLW Datums</small>
+                </div>
+            `);
+            
+            // Little Falls Station marker (Flow Rate)
+            const littleFallsMarker = L.marker([38.94977778, -77.12763889], {
+                title: 'Little Falls Station - Flow Rate'
+            }).addTo(map);
+            littleFallsMarker.bindPopup(`
+                <div style="text-align: center; font-weight: bold;">
+                    🌊 Little Falls Station<br>
+                    <strong>01646500</strong><br>
+                    Flow Rate Monitoring<br>
+                    <small>Discharge (CFS)</small>
+                </div>
+            `);
+            
+            // Apply neutral styling to match MapTiler Basic aesthetic
+            const mapElement = document.getElementById('potomac-map');
+            mapElement.style.filter = 'grayscale(20%) contrast(85%) brightness(105%)';
+        }
+        
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initMap, 100); // Small delay to ensure DOM is ready
+        });
+    </script>
 </body>
 </html> 
