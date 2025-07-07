@@ -1,14 +1,41 @@
-# Water Services MCP Server
+# Potomac River Water Services MCP Server
 
-A Model Context Protocol (MCP) server deployed on Cloudflare Workers that provides water level data and utility tools. This server doesn't require authentication and can be connected to Claude Desktop or other MCP clients.
+A Model Context Protocol (MCP) server deployed on Cloudflare Workers that provides real-time Potomac River water level and flow data from USGS monitoring stations. This server uses the USGS Water Services API to deliver current conditions, historical context, and trend analysis through AI-friendly tools.
 
 ## Available Tools
 
 The server provides the following tools:
+
+### Water Data Tools
+- `get_potomac_conditions` - **Primary tool** providing complete current conditions including water level and flow rate with historical context
+- `get_potomac_gage_depth` - Georgetown water level data with 7-day range and 90-minute trend analysis
+- `get_potomac_flow` - Little Falls flow rate data with 7-day range and 90-minute trend analysis
+- `get_measurement_info` - Technical documentation about measurement methodologies, units, and data quality
+
+### Utility Tools
 - `add` - Simple addition of two numbers
 - `calculate` - Multi-operation calculator (add, subtract, multiply, divide)
 - `local_destinations` - Information about local attractions and destinations
-- `get_potomac_gage_depth` - Potomac River water level data (currently disabled)
+
+## USGS Data Sources
+
+This server collects real-time data from two USGS monitoring stations:
+
+- **Georgetown Station (01647600)** - Water level monitoring at Wisconsin Ave
+  - Provides water level in feet (NAVD88 and WMLW datums)
+  - Located 0.6 miles upstream from Rock Creek mouth
+  - Coordinates: 38.9033611°, -77.0676667°
+
+- **Little Falls Station (01646500)** - Flow rate monitoring near pump station
+  - Provides discharge in cubic feet per second (CFS)
+  - Located in Montgomery County, Maryland
+  - Coordinates: 38.94977778°, -77.12763889°
+
+All data includes:
+- Current readings with timestamps
+- 7-day historical min/max values
+- 90-minute trend analysis (rising/falling/stable)
+- Data staleness indicators (>30 minutes old)
 
 ## Server Endpoints
 
@@ -93,6 +120,15 @@ To deploy to Cloudflare Workers:
 npm run deploy
 ```
 
+## Features
+
+- **Real-time Data**: Current water conditions updated every few minutes from USGS
+- **Historical Context**: 7-day min/max ranges for perspective
+- **Trend Analysis**: 90-minute trend detection to identify rising/falling conditions
+- **Smart Caching**: Intelligent caching with appropriate TTLs (14min current, 30min historical)
+- **Fallback Strategies**: Stale data and emergency responses during API outages
+- **Professional Landing Page**: Interactive map and tool documentation at the base URL
+
 ## Technical Details
 
 - **Runtime**: Cloudflare Workers with Durable Objects
@@ -100,6 +136,9 @@ npm run deploy
 - **Transport**: Server-Sent Events (SSE) and direct MCP
 - **Authentication**: None required (authless)
 - **CORS**: Minimal configuration for maximum compatibility
+- **Data Source**: USGS Water Services API
+- **Caching**: Cloudflare Cache API with time-bucketed keys
+- **Validation**: Zod schemas for all inputs/outputs
 
 ## Critical Configuration (DO NOT MODIFY)
 

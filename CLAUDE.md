@@ -95,11 +95,12 @@ This is a **Model Context Protocol (MCP) server** deployed on **Cloudflare Worke
 - Return `ToolResult` format with content array
 - Enable via `setToolRequestHandlers()` call
 
-### Water Level Tool Implementation
-Complete implementation exists in `src/tools/potomac-gage-depth.ts` but is commented out in main server. To enable:
-1. Uncomment tool registration in `src/index.ts` (lines 104-111)
-2. Tool provides current level, 7-day range, and trend analysis
-3. Handles multiple data validation scenarios and error states
+### Water Data Tools
+All water data tools are fully implemented and enabled:
+1. `get_potomac_conditions` - Primary tool for complete river conditions
+2. `get_potomac_gage_depth` - Georgetown water level with trend analysis
+3. `get_potomac_flow` - Little Falls flow rate with trend analysis
+4. `get_measurement_info` - Technical documentation and methodology
 
 ## Deployment
 
